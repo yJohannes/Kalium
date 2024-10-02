@@ -1,0 +1,14 @@
+QTextEdit
+{
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,20);
+    background-color: #1c1c1c;
+    color: #FFFFFF;
+    font-size: 16px;
+}
+
+QTextEdit:focus
+{
+    border: 1px solid rgba(255,255,255,190);
+}

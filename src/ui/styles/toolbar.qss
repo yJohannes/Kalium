@@ -1,0 +1,45 @@
+QToolBar
+{
+    background-color: qlineargradient(
+        x1: 0, y1: 0, x2: 1, y2: 1,
+        stop: 0 #212121,
+        stop: 1 #080808
+    );
+    border: none;
+    padding: 0px;
+}
+
+QToolBar QWidget
+{
+    color: white;
+}
+
+QToolBar QPushButton
+{
+    padding: 10px;
+    border-radius: 0px;
+    background-color: transparent;
+    color: white;
+    font-size: 14px;
+}
+
+QToolBar QPushButton::hover
+{
+    background-color: rgba(80, 80, 80, 50)
+}
+
+QToolBar QPushButton#close::hover
+{
+    background-color: rgba(255, 0, 0, 175);
+}
+
+QToolBar QPushButton::menu-indicator
+{
+    image: none;
+    width: 0px;
+}
+
+QToolBar::floatingIndicator {
+    background: transparent; /* Set the background to transparent */
+    border: none; /* Remove the border */
+}
