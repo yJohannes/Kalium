@@ -1,0 +1,29 @@
+Tokens are wrapped in <> and optionally have a number <tagN>
+
+space (\ ) -> <SP>
+
+Parentheses
+Type:
+() = P
+[] = S
+{} = C
+
+"\\left(":              "LP",
+"\\right)":             "RP",
+"\\left[":              "LS",
+"\\right]":             "RS",
+"\\left{":              "LC",
+"\\right}":             "RC",
+
+"{":                    "LL",
+"}":                    "RR",
+
+"\\begin{cases}":       "BC",
+"\\end{cases}":         "EC",
+"\\begin{matrix}":      "BM",
+"\\end{matrix}":        "EM",
+
+"\\int":                "IN",
+
+"\\text":               "TE",
+"\\mathrm":             "TE"

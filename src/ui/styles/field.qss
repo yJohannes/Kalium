@@ -1,56 +1,11 @@
-#field
+.field
 {
-    background-color: #181818;
+    background-color: [secondary];
+    border: 1px solid [field-hover];
+    border-radius: 4px;
 }
 
-#field:hover
+.field:hover
 {
-    background-color: #1b1b1b
-}
-
-#field QLabel
-{
-    font-size: 16px;
-    color: #FFFFFF;
-    background-color: transparent;
-}
-
-#field QPushButton
-{
-    background-color: #292929;
-    color: #FFFFFF;
-    font-size: 16px;
-    padding: 10px 8px;
-    border: none;
-    border-radius: 5px;
-}
-
-#field QPushButton::hover
-{
-    border: 1px solid rgba(255,255,255,190);
-    background-color: #2e2e2e;
-    color: white;
-}
-
-#field QPushButton:pressed
-{
-    border: 2px solid #78a2de;
-}
-
-#field QPushButton:focus
-{
-    border: 2px solid white;
-    outline: none;
-}
-
-
-#field QPushButton:checked
-{
-    border: 2px solid #78a2de;
-}
-
-#field QPushButton:checked:focus
-{
-    border: 2px solid white;
-    outline: none;
+    background-color: [field-hover]
 }
