@@ -1,31 +1,16 @@
 import ctypes
 
-lib = ctypes.CDLL('src/kalium/tests/test.dll')
+lib = ctypes.CDLL('./libpair.dll')
+lib.pair.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
+lib.pair.restype = ctypes.c_char_p
 
-lib.add.argtypes = [ctypes.c_int, ctypes.c_int]
-lib.add.restype = ctypes.c_int
+def pair(s: str, left: str, right: str, left_to: str, right_to: str) -> str:
+    result = lib.pair(s.encode('utf-8'), left.encode('utf-8'), right.encode('utf-8'), left_to.encode('utf-8'), right_to.encode('utf-8'))
+    return result.decode('utf-8')
 
-# Call the C++ function from Python
-result = lib.add(5, 3)
-print("Result from C++ function:", result)
-
-lib.strink.argtypes = [ctypes.c_char_p]
-lib.strink.restype = ctypes.c_char_p
-
-input_string = b"Hello! "
-result2 = lib.strink(input_string.encode('utf-8'))  
-print("Doubled string from C++ function:", result2.decode('utf-8'))  # Decode back to string
-
-# lib.free_string(result2)
-
-
-# lib.double_string.argtypes = [ctypes.c_char_p]
-# lib.double_string.restype = ctypes.c_char_p
-
-# lib.free_string.argtypes = [ctypes.c_char_p]
-
-# input_string = "Hello! "
-# result2 = lib.double_string(input_string.encode('utf-8'))  
-# print("Doubled string from C++ function:", result2.decode('utf-8'))  # Decode back to string
-
-# lib.free_string(result2)
+s = "(wow(Cat)(greg))(fly)"
+left = "("
+right = ")"
+left_to = "L"
+right_to = "R"
+print(pair(s, left, right, left_to, right_to))

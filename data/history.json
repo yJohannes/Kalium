@@ -1,9 +1,5 @@
 [
     [
-        "\\text{kg}",
-        "(_kilo gram)"
-    ],
-    [
         "dicsd",
         "dicsd"
     ],
@@ -20,19 +16,23 @@
         "dicsdoijvoisjo"
     ],
     [
-        "dicsdoijvoisjo",
-        "dicsdoijvoisjo"
-    ],
-    [
-        "dicsdoijvoisjo",
-        "dicsdoijvoisjo"
-    ],
-    [
         "dicsdoijvoisjoe\\sinx",
         "dicsdoijvoisjoe*sin(x)"
     ],
     [
-        "dicsdoijvoisjoe\\sinx",
-        "dicsdoijvoisjoe*sin(x)"
+        "\\sinx",
+        "sin(x)"
+    ],
+    [
+        "\\sinx",
+        "sin(x)"
+    ],
+    [
+        "\\sinx",
+        "sin(x)"
+    ],
+    [
+        "\\sinx",
+        "sin(x)"
     ]
 ]

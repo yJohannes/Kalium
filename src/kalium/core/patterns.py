@@ -36,7 +36,7 @@ com.new()
 frac = com.fn("frac") + com.cgroup() + com.cgroup()
 
 com.new()
-comb = com.fn("binom") + com.cgroup() + com.cgroup()
+binom = com.fn("binom") + com.cgroup() + com.cgroup()
 
 com.new()
 perm = com.pgroup() + com.base()
@@ -61,7 +61,7 @@ patterns = {
     'sqrt': sqrt,
     'nthrt': nthrt,
     'frac': frac,
-    'comb': comb,
+    'binom': binom,
     'perm': perm,
     'cases': cases,
     'mat': mat

@@ -8,7 +8,7 @@ from PySide6.QtGui import QClipboard, QKeySequence, QShortcut, QIcon
 from ui.ui import WindowUI
 from windows.sub_windows import AboutWindow, InfoWindow
 from utils.json_manager import JSONManager
-from kalium.engine import translate
+from kalium.ass_engine import translate
 
 class MainWindow(QMainWindow):
     clipboard = QClipboard()
