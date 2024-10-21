@@ -62,9 +62,6 @@ class MainWindow(QMainWindow):
             self._start_animation(self._animate_progressbar)
 
         ie_ref.textChanged.connect(lambda: start_translation(ie_ref.toPlainText()))
-        # self.ui.cas_button.pressed.connect(lambda: start_translation(ie_ref.toPlainText()))
-        # self.ui.sc_button.pressed.connect(lambda: start_translation(ie_ref.toPlainText()))
-
         self.ui.mode_button_group.buttonToggled.connect(lambda: start_translation(ie_ref.toPlainText()))
 
         def copy() -> None:
@@ -181,12 +178,10 @@ class MainWindow(QMainWindow):
         self.settings_manager.save_data()
 
 
-
-
     def _change_panel(self, panel: QWidget):
         if self.ui.splitter.widget(1) is not panel:
             self.ui.splitter.replaceWidget(1, panel)
-            panel.setFocus()
+        panel.setFocus()
         return
 
     def _start_animation(self, animation: "function"):

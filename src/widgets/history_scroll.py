@@ -57,10 +57,20 @@ class HistoryScroll(QScrollArea):
         self._update_stylesheet()
 
     def delete(self, widget: QWidget):
+        next = self.content_layout.indexOf(widget) + 1
+        if next_item := self.content_layout.itemAt(next):
+            next_item.widget().setFocus()
+        elif prev_item := self.content_layout.itemAt(next - 2):
+            prev_item.widget().setFocus()
+        else:
+            self.setFocus()
+
         self.content_layout.removeWidget(widget)
         widget.deleteLater()
+        self.num_buttons -= 1
         if self.content_layout.count() == 0:
             self.historyCleared.emit()
+        return
 
     def clear(self):
         while self.content_layout.count() > 0:
@@ -68,6 +78,7 @@ class HistoryScroll(QScrollArea):
             widget = item.widget()
             if widget:
                 self.delete(widget)
+        return
 
     def append(self, expression: str, translation: str) -> None:
         label = QLabel(translation)
