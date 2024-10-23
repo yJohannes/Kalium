@@ -5,8 +5,8 @@ from PySide6.QtGui import QColor, QFont
 
 from PySide6.QtWidgets import (
     QApplication, QMainWindow,
-    QDockWidget, QSplitter, QHBoxLayout, QVBoxLayout,
-    QWidget, QPushButton, QButtonGroup, QRadioButton,
+    QSplitter, QHBoxLayout, QVBoxLayout, QGridLayout, QGroupBox, QButtonGroup,
+    QWidget, QPushButton, QRadioButton, QCheckBox,
     QPlainTextEdit, QLineEdit, QLabel,
     QSizePolicy, QProgressBar, QToolBar,
     QGraphicsDropShadowEffect
@@ -14,9 +14,7 @@ from PySide6.QtWidgets import (
 
 from utils.resource_manager import load_and_concatenate
 from utils.json_manager import JSONManager
-from widgets.color_picker import ColorPicker
-from widgets.color_form import ColorForm
-from widgets.history_scroll import HistoryScroll
+from widgets import ColorPicker, ColorForm, HistoryScroll, MacroTable
 
 from time import perf_counter
 
@@ -166,6 +164,7 @@ class WindowUI:
         self.settings_panel.setProperty("class", "panel")
 
         settings_header = QLabel("Settings")
+        settings_header.setAlignment(Qt.AlignCenter)
         settings_header.setProperty("class", "h1")
 
         mode_layout = QVBoxLayout()
@@ -221,14 +220,40 @@ class WindowUI:
 
         macro_layout.addLayout(macro_control_layout)
 
+        self.macro_table = MacroTable()
+        self.macro_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.add_macro = QPushButton("+")
+
+        macro_layout.addWidget(self.macro_table)
+        macro_layout.addWidget(self.add_macro)
         self.macro_edit = QPlainTextEdit()
-        macro_layout.addWidget(self.macro_edit)
+
+        app_settings_layout = QGridLayout()
+        app_settings_field = QGroupBox()
+        app_settings_field.setLayout(app_settings_layout)
+        app_settings_field.setProperty("class", "field")
+
+        checkbox1 = QCheckBox("Checkbox 1")
+        checkbox2 = QCheckBox("Checkbox 2")
+        checkbox3 = QCheckBox("Checkbox 3")
+        self.cb_on_top = QCheckBox("Always on top")
+
+        checkbox1.setLayoutDirection(Qt.RightToLeft)
+        checkbox2.setLayoutDirection(Qt.RightToLeft)
+        checkbox3.setLayoutDirection(Qt.RightToLeft)
+        self.cb_on_top.setLayoutDirection(Qt.RightToLeft)
+
+        app_settings_layout.addWidget(checkbox1, 0, 0, alignment=Qt.AlignCenter)
+        app_settings_layout.addWidget(checkbox2, 0, 1, alignment=Qt.AlignCenter)
+        app_settings_layout.addWidget(checkbox3, 1, 0, alignment=Qt.AlignCenter)
+        app_settings_layout.addWidget(self.cb_on_top, 1, 1, alignment=Qt.AlignCenter)
 
         settings_layout.addWidget(settings_header)
         settings_layout.addSpacing(5)
         settings_layout.addWidget(mode_field)
         settings_layout.addWidget(self.macro_field)
-        settings_layout.addStretch()
+        settings_layout.addWidget(app_settings_field)
+        settings_layout.addStretch(0)
 
         #### HISTORY ####
         self.history_layout = QVBoxLayout()
@@ -237,6 +262,7 @@ class WindowUI:
         self.history_panel.setProperty("class", "panel")
 
         history_header = QLabel("History")
+        history_header.setAlignment(Qt.AlignCenter)
         history_header.setProperty("class", "h1")
 
 
@@ -271,8 +297,9 @@ class WindowUI:
         self.theme_panel.setLayout(theme_layout)
         self.theme_panel.setProperty("class", "panel")
 
-        theme_label = QLabel("Theme")
-        theme_label.setProperty("class", "h1")
+        theme_header = QLabel("Theme")
+        theme_header.setAlignment(Qt.AlignCenter)
+        theme_header.setProperty("class", "h1")
 
         picker_layout = QVBoxLayout()
         picker_field = QWidget()
@@ -335,7 +362,11 @@ class WindowUI:
         self.light = QRadioButton("Light")
         self.custom = QRadioButton("Custom")
 
-        mode_group = QButtonGroup()
+        self.dark.setFocusPolicy(Qt.TabFocus)
+        self.light.setFocusPolicy(Qt.TabFocus)
+        self.custom.setFocusPolicy(Qt.TabFocus)
+
+        mode_group = QButtonGroup(window)
 
         mode_group.addButton(self.dark)
         mode_group.addButton(self.light)
@@ -354,7 +385,7 @@ class WindowUI:
 
         self.theme_mode_field.setLayout(theme_mode_layout)
 
-        theme_layout.addWidget(theme_label)
+        theme_layout.addWidget(theme_header)
         theme_layout.addWidget(picker_field)
         theme_layout.addWidget(self.form_container)
         theme_layout.addWidget(mode_label)
@@ -373,6 +404,10 @@ class WindowUI:
             if isinstance(widget, QPushButton):
                 widget.setFocusPolicy(Qt.TabFocus)
                 widget.setAutoDefault(True)
+            elif isinstance(widget, QCheckBox):
+                widget.setFocusPolicy(Qt.TabFocus)
+
+
 
         self.progressbar.setGraphicsEffect(self._shadow(self.progressbar, shadow_color))
         # self.i_text_edit.setGraphicsEffect(self._shadow(self.i_text_edit, shadow_color))

@@ -141,7 +141,9 @@ class InfoWindow(QDialog):
             ("Ctrl + ,  /  Ctrl + O", "Open settings tab"),
             ("Ctrl + H", "Open history tab"),
             ("Ctrl + T", "Open theme tab"),
-            ("Ctrl + K", "Copy color picker color"),
+            ("Ctrl + Shift + D", "Set dark mode"),
+            ("Ctrl + Shift + L", "Set light mode"),
+            ("Ctrl + K", "Copy color picker color")
         ]
 
         for key_combination, action in data:

@@ -8,7 +8,7 @@ from PySide6.QtGui import QClipboard, QKeySequence, QShortcut, QIcon
 from ui.ui import WindowUI
 from windows.sub_windows import AboutWindow, InfoWindow
 from utils.json_manager import JSONManager
-from kalium.ass_engine import translate
+from engine.ass_engine import translate
 
 class MainWindow(QMainWindow):
     clipboard = QClipboard()
@@ -27,9 +27,11 @@ class MainWindow(QMainWindow):
     
         settings = os.path.join(cwd, '..', '..', 'config', 'settings.json')
         history = os.path.join(cwd, '..', '..', 'data', 'history.json')
+        macros = os.path.join(cwd, '..', '..', 'data', 'macros.json')
 
         self.settings_manager = JSONManager(settings)
         self.history_manager = JSONManager(history)
+        self.macro_manager = JSONManager(macros)
 
         x, y = self.settings_manager.get_property("window", "position")
         w, h = self.settings_manager.get_property("window", "dimensions")
@@ -40,6 +42,7 @@ class MainWindow(QMainWindow):
         self.ui = WindowUI()
         self.ui.init_ui(self)
         self._init_signals()
+        self._load_data()
         return
     
     def _init_signals(self):
@@ -50,14 +53,14 @@ class MainWindow(QMainWindow):
         
         ie_ref = self.ui.i_text_edit
         oe_ref = self.ui.o_text_edit
-        me_ref = self.ui.macro_edit
         
         ie_ref.keyPressEvent = lambda event: self.tab_event(ie_ref, event)
         oe_ref.keyPressEvent = lambda event: self.tab_event(oe_ref, event)
-        me_ref.keyPressEvent = lambda event: self.tab_event(me_ref, event)
 
         def start_translation(expr):
             translation = translate(expr, TI_on=self.ui.cas_button.isChecked(), SC_on=self.ui.sc_button.isChecked())
+            for macro in self.macro_manager.get_data():
+                translation = translation.replace(macro[0], macro[1])
             oe_ref.setPlainText(translation)
             self._start_animation(self._animate_progressbar)
 
@@ -80,13 +83,25 @@ class MainWindow(QMainWindow):
         self.ui.copy_button.clicked.connect(copy)
         self.ui.quick_button.clicked.connect(quick)
 
-        show_macros = lambda: (
-            me_ref.setVisible(not me_ref.isVisible()),
+        def show_macros():
+            self.ui.macro_table.setVisible(not self.ui.macro_table.isVisible())
+            self.ui.add_macro.setVisible(not self.ui.add_macro.isVisible())
             self.ui.macro_field.updateGeometry(),
-            self.ui.show_macros_button.setText("✕") if me_ref.isVisible() else self.ui.show_macros_button.setText("☰"),
-        )
+            self.ui.show_macros_button.setText("✕") if self.ui.macro_table.isVisible() else self.ui.show_macros_button.setText("☰"),
 
         self.ui.show_macros_button.clicked.connect(show_macros)
+        self.ui.add_macro.clicked.connect(lambda _: self.ui.macro_table.add_row())
+        self.ui.macro_table.macrosChanged.connect(lambda data: self.macro_manager.set_data(data))
+
+        def toggle_on_top(b: bool):
+            if b:
+                self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+            else:
+                self.setWindowFlags(self.windowFlags() & ~Qt.WindowStaysOnTopHint)
+            self.show()
+            return
+
+        self.ui.cb_on_top.toggled.connect(toggle_on_top)
 
         open_settings = lambda: self._change_panel(self.ui.settings_panel)
         open_history = lambda: self._change_panel(self.ui.history_panel)
@@ -124,9 +139,9 @@ class MainWindow(QMainWindow):
                     self.ui.load_style(mode)
             return
 
-        self.ui.dark.clicked.connect(lambda: choose_mode("dark"))
-        self.ui.light.clicked.connect(lambda: choose_mode("light"))
-        self.ui.custom.clicked.connect(lambda: choose_mode("custom"))
+        self.ui.dark.toggled.connect(lambda: choose_mode("dark"))
+        self.ui.light.toggled.connect(lambda: choose_mode("light"))
+        self.ui.custom.toggled.connect(lambda: choose_mode("custom"))
 
         def load_history_text(data):
             self.ui.i_text_edit.blockSignals(True)
@@ -134,8 +149,6 @@ class MainWindow(QMainWindow):
             self.ui.o_text_edit.setPlainText(data[1])
             self.ui.i_text_edit.blockSignals(False)
             return
-
-        self.ui.history_scroll.append_list(self.history_manager.data)
 
         self.ui.history_scroll.itemPressed.connect(load_history_text)
         self.ui.history_scroll.historyCleared.connect(lambda: self.ui.history_del.setChecked(False))
@@ -151,6 +164,8 @@ class MainWindow(QMainWindow):
             "Ctrl+O": open_settings,
             "Ctrl+H": open_history,
             "Ctrl+T": open_theme,
+            "Ctrl+Shift+D": lambda: self.ui.dark.setChecked(True),
+            "Ctrl+Shift+L": lambda: self.ui.light.setChecked(True),
             "Ctrl+K": copy_color
         }
 
@@ -163,19 +178,22 @@ class MainWindow(QMainWindow):
         
         return
     
-    def _save_all(self):
+    def _load_data(self):
+        self.ui.history_scroll.append_list(self.history_manager.data)
+        self.ui.macro_table.set_data(self.macro_manager.data)
+
+    def _save_data(self):
         self.ui.save_colors()
         self.history_manager.set_data(self.ui.history_scroll.get_history_data())
+        # self.macro_manager.set_data(self.mac)
         
         geo = self.normalGeometry()
         self.settings_manager.set_property("window", "position", [geo.x(), geo.y()])
         self.settings_manager.set_property("window", "dimensions", [geo.width(), geo.height()])
         
-        # make a class for kalium 
-        # mode = self.ui.mode_button_group.checkedButton().text().lower() # make btn have a property instead of this
-
-        # self.settings_manager.set_property("settings", "mode", mode)
         self.settings_manager.save_data()
+        self.history_manager.save_data()
+        self.macro_manager.save_data()
 
 
     def _change_panel(self, panel: QWidget):
@@ -271,5 +289,5 @@ class MainWindow(QMainWindow):
         return super(QMainWindow, self).mouseReleaseEvent(event)
 
     def closeEvent(self, event):
-        self._save_all()
+        self._save_data()
         event.accept()

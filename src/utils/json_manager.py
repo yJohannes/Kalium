@@ -10,12 +10,10 @@ class JSONManager():
     
     def set_data(self, data):
         self.data = data
-        self.save_data()
         return
     
     def set_data_from_file(self, path) -> None:
         self.data = self.load_data(path)
-        self.save_data()
         return
     
     def append(self, data):
@@ -31,7 +29,7 @@ class JSONManager():
 
     def load_data(self, path):
         if os.path.exists(path):
-            with open(path, 'r') as file:
+            with open(path, 'r', encoding='utf-8') as file:
                 return json.load(file)
         else:
             self._create_default_data_file()
@@ -39,7 +37,7 @@ class JSONManager():
 
     def save_data(self) -> None:
         """Method for writing to data file."""
-        with open(self.filepath, 'w') as file:
+        with open(self.filepath, 'w', encoding='utf-8') as file:
             json.dump(self.data, file, indent=4)
         return
 
@@ -72,6 +70,6 @@ class JSONManager():
 
     def _create_default_data_file(self) -> None:
         os.makedirs(os.path.dirname(self.filepath), exist_ok=True)
-        with open(self.filepath, 'w') as json_file:
+        with open(self.filepath, 'w', encoding='utf-8') as json_file:
             json.dump(self.default_data, json_file, indent=4)
         return

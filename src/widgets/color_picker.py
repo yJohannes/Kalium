@@ -38,7 +38,7 @@ class ColorPort(QWidget):
 
         # Add a black gradient from top to bottom to make it fade to black
         black_gradient = QLinearGradient(0, 0, 0, self.height())
-        black_gradient.setColorAt(0, Qt.transparent)  # Transparent at the top
+        black_gradient.setColorAt(0, Qt.transparent) # Transparent at the top
         black_gradient.setColorAt(1, QColor(0, 0, 0))
 
         painter.setBrush(QBrush(black_gradient))
