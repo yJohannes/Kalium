@@ -22,7 +22,7 @@ class MacroTable(QTableWidget):
         self.setCornerButtonEnabled(False)
         self.setEditTriggers(QAbstractItemView.AllEditTriggers) # Set the table to allow editing with a single click
 
-        self.setColumnWidth(2, self.row_h+20)
+        self.setColumnWidth(2, self.row_h+40)
         self.setColumnWidth(3, self.row_h)
 
         vh = self.verticalHeader()

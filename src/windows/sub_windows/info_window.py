@@ -49,9 +49,12 @@ class InfoWindow(QDialog):
             ("Ctrl + 3", "Use SpeedCrunch translation mode"),
             ("Ctrl + H", "Open history tab"),
             ("Ctrl + T", "Open theme tab"),
+            ("Ctrl + Shift + T", "Copy color picker color"),
             ("Ctrl + Shift + D", "Set dark mode"),
             ("Ctrl + Shift + L", "Set light mode"),
-            ("Ctrl + K", "Copy color picker color")
+            ("Legacy hotkeys", ""),
+            ("Ctrl + G", "Translate g to _g"),
+            ("Ctrl + K", "Apply TI-Nspire constants")
         ]
 
         for key_combination, action in data:

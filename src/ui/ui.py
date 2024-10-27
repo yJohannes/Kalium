@@ -202,7 +202,6 @@ class WindowUI:
         mode_layout.addLayout(mode_button_layout)
 
         macro_layout = QVBoxLayout()
-
         self.macro_field = QWidget()
         self.macro_field.setLayout(macro_layout)
         self.macro_field.setProperty("class", "field")
@@ -234,34 +233,53 @@ class WindowUI:
 
         macro_layout.addWidget(self.macro_table)
         macro_layout.addLayout(macro_btn_layout)
-        self.macro_edit = QPlainTextEdit()
 
         # app_settings_layout = QGridLayout()
         # app_settings_field = QGroupBox()
         # app_settings_field.setLayout(app_settings_layout)
         # app_settings_field.setProperty("class", "field")
 
-        # checkbox1 = QCheckBox("Checkbox 1")
-        # checkbox2 = QCheckBox("Checkbox 2")
-        # checkbox3 = QCheckBox("Checkbox 3")
-        # self.cb_on_top = QCheckBox("Always on top")
 
-        # checkbox1.setLayoutDirection(Qt.RightToLeft)
-        # checkbox2.setLayoutDirection(Qt.RightToLeft)
-        # checkbox3.setLayoutDirection(Qt.RightToLeft)
-        # self.cb_on_top.setLayoutDirection(Qt.RightToLeft)
+        legacy_layout = QVBoxLayout()
+        legacy_field = QWidget()
+        legacy_field.setLayout(legacy_layout)
+        legacy_field.setProperty("class", "field")
 
-        # app_settings_layout.addWidget(checkbox1, 0, 0, alignment=Qt.AlignCenter)
-        # app_settings_layout.addWidget(checkbox2, 0, 1, alignment=Qt.AlignCenter)
-        # app_settings_layout.addWidget(checkbox3, 1, 0, alignment=Qt.AlignCenter)
-        # app_settings_layout.addWidget(self.cb_on_top, 1, 1, alignment=Qt.AlignCenter)
+
+        legacy_control_layout = QHBoxLayout()
+        legacy_control_layout.setContentsMargins(0,0,0,0)
+        legacy_control_layout.setSpacing(0)
+
+        legacy_label = QLabel("Legacy settings")
+
+        self.show_legacy = QPushButton("✕")
+        self.show_legacy.setProperty("class", "toolbutton")
+
+        legacy_control_layout.addWidget(legacy_label)
+        legacy_control_layout.addStretch()
+        legacy_control_layout.addWidget(self.show_legacy)
+
+        legacy_layout.addLayout(legacy_control_layout)
+
+        # self.legacy = QPushButton("Legacy hotkeys")
+        # self.legacy.setCheckable(True)
+
+        const_g_layout = QHBoxLayout()
+        self.constants = QPushButton("Nspire constants")
+        self.constants.setCheckable(True)
+        self.g = QPushButton("g to _g")
+        self.g.setCheckable(True)
+        const_g_layout.addWidget(self.constants, stretch=10)
+        const_g_layout.addWidget(self.g, stretch=3)
+
+        # legacy_layout.addWidget(self.legacy)
+        legacy_layout.addLayout(const_g_layout)
 
         settings_layout.addWidget(settings_header)
         settings_layout.addSpacing(5)
         settings_layout.addWidget(mode_field)
         settings_layout.addWidget(self.macro_field)
-        # settings_layout.addWidget(app_settings_field)
-        # settings_layout.addStretch(0)
+        settings_layout.addWidget(legacy_field)
 
         #### HISTORY ####
         self.history_layout = QVBoxLayout()

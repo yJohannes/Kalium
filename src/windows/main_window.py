@@ -53,7 +53,13 @@ class MainWindow(QMainWindow):
         oe_ref.keyPressEvent = lambda event: self.tab_event(oe_ref, event)
 
         def start_translation():
-            translation = translate(ie_ref.toPlainText(), TI_on=self.ui.cas_button.isChecked(), SC_on=self.ui.sc_button.isChecked())
+            translation = translate(
+                ie_ref.toPlainText(),
+                TI_on=self.ui.cas_button.isChecked(),
+                SC_on=self.ui.sc_button.isChecked(),
+                constants_on=self.ui.constants.isChecked(),
+                g_on=self.ui.g.isChecked()
+            )
             for macro in self.ui.macro_table.get_data():
                 if macro[2] and macro[0] != "":
                     translation = translation.replace(macro[0], macro[1])
@@ -90,16 +96,10 @@ class MainWindow(QMainWindow):
 
         def show_macros():
             vis = self.ui.macro_table.isVisible()
-            # if vis:
-            #     self.ui.macro_field.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-            # else:
-            #     self.ui.macro_field.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
             self.ui.show_macros_button.setText("☰") if vis else self.ui.show_macros_button.setText("✕")
             self.ui.macro_table.setVisible(not vis)
             self.ui.add_macro.setVisible(not vis)
             self.ui.open_macros_btn.setVisible(not vis)
-            self.ui.macro_field.updateGeometry()
 
         self.ui.show_macros_button.clicked.connect(show_macros)
         self.ui.add_macro.clicked.connect(lambda _: self.ui.macro_table.add_row())
@@ -116,15 +116,13 @@ class MainWindow(QMainWindow):
         self.ui.open_macros_btn.clicked.connect(lambda: open_file_editor(resource_path("data/macros.json"), update_macro_table))
         self.ui.macro_table.macrosChanged.connect(lambda data: self.macro_manager.set_data(data))
 
-        # def toggle_on_top(b: bool):
-        #     if b:
-        #         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
-        #     else:
-        #         self.setWindowFlags(self.windowFlags() & ~Qt.WindowStaysOnTopHint)
-        #     self.show()
-        #     return
-
-        # self.ui.cb_on_top.toggled.connect(toggle_on_top)
+        def show_legacy():
+            vis = self.ui.g.isVisible()
+            self.ui.show_legacy.setText("☰") if vis else self.ui.show_legacy.setText("✕")
+            # self.ui.legacy.setVisible(not vis)
+            self.ui.constants.setVisible(not vis)
+            self.ui.g.setVisible(not vis)
+        self.ui.show_legacy.clicked.connect(show_legacy)
 
         open_settings = lambda: self._change_panel(self.ui.settings_panel)
         open_history = lambda: self._change_panel(self.ui.history_panel)
@@ -195,9 +193,11 @@ class MainWindow(QMainWindow):
             "Ctrl+3": lambda: self.ui.sc_button.setChecked(True),
             "Ctrl+H": open_history,
             "Ctrl+T": open_theme,
+            "Ctrl+Shift+T": copy_color,
             "Ctrl+Shift+D": lambda: self.ui.dark.setChecked(True),
             "Ctrl+Shift+L": lambda: self.ui.light.setChecked(True),
-            "Ctrl+K": copy_color
+            "Ctrl+G": lambda: self.ui.g.setChecked(not self.ui.g.isChecked()),
+            "Ctrl+K": lambda: self.ui.constants.setChecked(not self.ui.constants.isChecked())
         }
 
         for (key, connection) in key_map.items():
@@ -214,6 +214,10 @@ class MainWindow(QMainWindow):
         for btn in self.ui.mode_button_group.buttons():
             if btn.property("mode") == self.translation_mode:
                 btn.setChecked(True)
+        
+        # self.ui.legacy.setChecked(self.settings_manager.get_property("legacy", "hotkeys"))
+        self.ui.constants.setChecked(self.settings_manager.get_property("legacy", "constants"))
+        self.ui.g.setChecked(self.settings_manager.get_property("legacy", "g"))
 
         self.ui.history_scroll.append_list(self.history_manager.data)
         self.ui.macro_table.set_data(self.macro_manager.data)
@@ -226,7 +230,10 @@ class MainWindow(QMainWindow):
         self.settings_manager.set_property("window", "position", [geo.x(), geo.y()])
         self.settings_manager.set_property("window", "dimensions", [geo.width(), geo.height()])
         self.settings_manager.set_property("settings", "mode", self.translation_mode)
-        
+        # self.settings_manager.set_property("legacy", "hotkeys", self.ui.legacy.isChecked())
+        self.settings_manager.set_property("legacy", "g", self.ui.g.isChecked())
+        self.settings_manager.set_property("legacy", "constants", self.ui.constants.isChecked())
+
         self.settings_manager.save_data()
         self.history_manager.save_data()
         self.macro_manager.save_data()
