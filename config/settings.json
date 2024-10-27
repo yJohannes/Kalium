@@ -1,15 +1,15 @@
 {
-    "window": {
-        "position": [
-            280,
-            39
-        ],
-        "dimensions": [
-            785,
-            621
-        ]
-    },
-    "settings": {
-        "mode": "default"
-    }
+	"window": {
+		"position": [
+			241,
+			75
+		],
+		"dimensions": [
+			791,
+			581
+		]
+	},
+	"settings": {
+		"mode": "cas"
+	}
 }

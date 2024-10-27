@@ -1,48 +1,43 @@
+import sys
 import os
 import asyncio
 
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget
-from PySide6.QtCore import Qt, QPoint, QSize, QEvent
-from PySide6.QtGui import QClipboard, QKeySequence, QShortcut, QIcon
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QSizePolicy
+from PySide6.QtCore import Qt, QPoint, QEvent
+from PySide6.QtGui import QClipboard, QKeySequence, QShortcut, QIcon, QColor
 
 from ui.ui import WindowUI
-from windows.sub_windows import AboutWindow, InfoWindow
+from windows.sub_windows import AboutWindow, InfoWindow, EditorWindow
 from utils.json_manager import JSONManager
-from engine.ass_engine import translate
+from utils.resource_helpers import resource_path
+from engine.old_engine import translate
 
 class MainWindow(QMainWindow):
     clipboard = QClipboard()
     async_tasks = []
-
+    dialogs = []
 
     def __init__(self):
         super().__init__()
         QApplication.instance().setAttribute(Qt.AA_EnableHighDpiScaling)
         self.setWindowTitle("Kalium")
-        cwd = os.path.dirname(__file__)
         
-        icon_path = os.path.join(cwd, '..', '..', 'img', 'logo2.png')
-        icon = QIcon(icon_path) # Noto Sans Bold 270
+        icon = QIcon(resource_path("img\logo2.png"))
         QApplication.instance().setWindowIcon(icon)
-    
-        settings = os.path.join(cwd, '..', '..', 'config', 'settings.json')
-        history = os.path.join(cwd, '..', '..', 'data', 'history.json')
-        macros = os.path.join(cwd, '..', '..', 'data', 'macros.json')
+
+        settings = resource_path("config/settings.json")
+        history = resource_path("data/history.json")
+        macros = resource_path("data/macros.json")
 
         self.settings_manager = JSONManager(settings)
         self.history_manager = JSONManager(history)
         self.macro_manager = JSONManager(macros)
 
-        x, y = self.settings_manager.get_property("window", "position")
-        w, h = self.settings_manager.get_property("window", "dimensions")
-
-        self.setGeometry(x, y, w, h)
-
-
         self.ui = WindowUI()
         self.ui.init_ui(self)
         self._init_signals()
         self._load_data()
+        self.setFocus()
         return
     
     def _init_signals(self):
@@ -57,15 +52,25 @@ class MainWindow(QMainWindow):
         ie_ref.keyPressEvent = lambda event: self.tab_event(ie_ref, event)
         oe_ref.keyPressEvent = lambda event: self.tab_event(oe_ref, event)
 
-        def start_translation(expr):
-            translation = translate(expr, TI_on=self.ui.cas_button.isChecked(), SC_on=self.ui.sc_button.isChecked())
-            for macro in self.macro_manager.get_data():
-                translation = translation.replace(macro[0], macro[1])
+        def start_translation():
+            translation = translate(ie_ref.toPlainText(), TI_on=self.ui.cas_button.isChecked(), SC_on=self.ui.sc_button.isChecked())
+            for macro in self.ui.macro_table.get_data():
+                if macro[2] and macro[0] != "":
+                    translation = translation.replace(macro[0], macro[1])
             oe_ref.setPlainText(translation)
             self._start_animation(self._animate_progressbar)
+            print("aliutettu")
+            return
+        
+        def mode_changed(btn, on):
+            if on:
+                self.translation_mode = btn.property("mode")
+                start_translation()
+            return
 
-        ie_ref.textChanged.connect(lambda: start_translation(ie_ref.toPlainText()))
-        self.ui.mode_button_group.buttonToggled.connect(lambda: start_translation(ie_ref.toPlainText()))
+        ie_ref.textChanged.connect(lambda: start_translation())
+        self.ui.mode_button_group.buttonToggled.connect(mode_changed)
+        self.ui.macro_table.macrosChanged.connect(lambda: start_translation())
 
         def copy() -> None:
             _in = self.ui.i_text_edit.toPlainText()
@@ -84,24 +89,42 @@ class MainWindow(QMainWindow):
         self.ui.quick_button.clicked.connect(quick)
 
         def show_macros():
-            self.ui.macro_table.setVisible(not self.ui.macro_table.isVisible())
-            self.ui.add_macro.setVisible(not self.ui.add_macro.isVisible())
-            self.ui.macro_field.updateGeometry(),
-            self.ui.show_macros_button.setText("✕") if self.ui.macro_table.isVisible() else self.ui.show_macros_button.setText("☰"),
+            vis = self.ui.macro_table.isVisible()
+            # if vis:
+            #     self.ui.macro_field.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+            # else:
+            #     self.ui.macro_field.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+            self.ui.show_macros_button.setText("☰") if vis else self.ui.show_macros_button.setText("✕")
+            self.ui.macro_table.setVisible(not vis)
+            self.ui.add_macro.setVisible(not vis)
+            self.ui.open_macros_btn.setVisible(not vis)
+            self.ui.macro_field.updateGeometry()
 
         self.ui.show_macros_button.clicked.connect(show_macros)
         self.ui.add_macro.clicked.connect(lambda _: self.ui.macro_table.add_row())
+
+        def open_file_editor(file_path, callback):
+            editor = EditorWindow(self, file_path=file_path)
+            editor.fileSaved.connect(callback)
+            editor.show()
+
+        def update_macro_table():
+            self.macro_manager.update()
+            self.ui.macro_table.set_data(self.macro_manager.data)
+
+        self.ui.open_macros_btn.clicked.connect(lambda: open_file_editor(resource_path("data/macros.json"), update_macro_table))
         self.ui.macro_table.macrosChanged.connect(lambda data: self.macro_manager.set_data(data))
 
-        def toggle_on_top(b: bool):
-            if b:
-                self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
-            else:
-                self.setWindowFlags(self.windowFlags() & ~Qt.WindowStaysOnTopHint)
-            self.show()
-            return
+        # def toggle_on_top(b: bool):
+        #     if b:
+        #         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+        #     else:
+        #         self.setWindowFlags(self.windowFlags() & ~Qt.WindowStaysOnTopHint)
+        #     self.show()
+        #     return
 
-        self.ui.cb_on_top.toggled.connect(toggle_on_top)
+        # self.ui.cb_on_top.toggled.connect(toggle_on_top)
 
         open_settings = lambda: self._change_panel(self.ui.settings_panel)
         open_history = lambda: self._change_panel(self.ui.history_panel)
@@ -115,38 +138,42 @@ class MainWindow(QMainWindow):
 
         copy_color = lambda: self.clipboard.setText(self.ui.color_line.text())
         self.ui.copy_color_button.clicked.connect(copy_color)
-        self.ui.color_picker.colorChanged.connect(lambda color: (
-            self.ui.color_form.setBoxColor(color),
-            self.ui.color_line.setText(color.name())
-        ))
-        
-        self.ui.color_form.boxPressed.connect(lambda box: self.ui.color_picker.setColor(self.ui.color_form.getBoxColor(box)))
 
-        def dwd(target, color):
+        def on_picker_color_changed(color):
+            self.ui.color_form.set_focused_box_color(color),
+            self.ui.color_line.setText(color.name())
+
+        self.ui.color_picker.colorChanged.connect(on_picker_color_changed)
+        self.ui.color_form.boxPressed.connect(lambda box: self.ui.color_picker.set_color(self.ui.color_form.get_box_color(box)))
+
+        def update_color(target, color):
             self.ui.theme_manager.set_property("custom", target, color.name())
             self.ui.request_style_update()
 
-        self.ui.color_form.colorChanged.connect(dwd)
+        self.ui.color_form.colorChanged.connect(update_color)
 
         def choose_mode(mode: str):
             if self.ui.mode == mode: return
             match mode:
                 case "dark" | "light":
                     self.ui.color_form.lock_boxes(True)
-                    self.ui.load_style(mode)
                 case "custom":
                     self.ui.color_form.lock_boxes(False)
-                    self.ui.load_style(mode)
+            
+            self.ui.load_style(mode)
+            print(mode)
+            self.ui.color_form.set_box_colors([QColor(color) for color in self.ui.theme_manager.get_section(mode).values()])
             return
 
         self.ui.dark.toggled.connect(lambda: choose_mode("dark"))
         self.ui.light.toggled.connect(lambda: choose_mode("light"))
-        self.ui.custom.toggled.connect(lambda: choose_mode("custom"))
+        # self.ui.custom.toggled.connect(lambda: choose_mode("custom"))
 
         def load_history_text(data):
+            latex, translation = data
             self.ui.i_text_edit.blockSignals(True)
-            self.ui.i_text_edit.setPlainText(data[0])
-            self.ui.o_text_edit.setPlainText(data[1])
+            self.ui.i_text_edit.setPlainText(latex)
+            self.ui.o_text_edit.setPlainText(translation)
             self.ui.i_text_edit.blockSignals(False)
             return
 
@@ -160,8 +187,12 @@ class MainWindow(QMainWindow):
             "Ctrl+R": copy,
             "Ctrl+P": paste,
             "Ctrl+Q": quick,
+            "Ctrl+Shift+Z": lambda: self.ui.settings_button.setFocus(),
             "Ctrl+,": open_settings,
             "Ctrl+O": open_settings,
+            "Ctrl+1": lambda: self.ui.default_button.setChecked(True),
+            "Ctrl+2": lambda: self.ui.cas_button.setChecked(True),
+            "Ctrl+3": lambda: self.ui.sc_button.setChecked(True),
             "Ctrl+H": open_history,
             "Ctrl+T": open_theme,
             "Ctrl+Shift+D": lambda: self.ui.dark.setChecked(True),
@@ -173,23 +204,28 @@ class MainWindow(QMainWindow):
             QShortcut(QKeySequence(key), self).activated.connect(connection)
 
         self.installEventFilter(self)
-        self.setFocus()
-
-        
         return
     
     def _load_data(self):
+        x, y = self.settings_manager.get_property("window", "position")
+        w, h = self.settings_manager.get_property("window", "dimensions")
+        self.setGeometry(x, y, w, h)
+        self.translation_mode = self.settings_manager.get_property("settings", "mode")
+        for btn in self.ui.mode_button_group.buttons():
+            if btn.property("mode") == self.translation_mode:
+                btn.setChecked(True)
+
         self.ui.history_scroll.append_list(self.history_manager.data)
         self.ui.macro_table.set_data(self.macro_manager.data)
 
     def _save_data(self):
         self.ui.save_colors()
         self.history_manager.set_data(self.ui.history_scroll.get_history_data())
-        # self.macro_manager.set_data(self.mac)
         
         geo = self.normalGeometry()
         self.settings_manager.set_property("window", "position", [geo.x(), geo.y()])
         self.settings_manager.set_property("window", "dimensions", [geo.width(), geo.height()])
+        self.settings_manager.set_property("settings", "mode", self.translation_mode)
         
         self.settings_manager.save_data()
         self.history_manager.save_data()
@@ -249,8 +285,8 @@ class MainWindow(QMainWindow):
         
         return super().eventFilter(source, event)
 
-    def _open_sub_window(self, sub_type: AboutWindow | InfoWindow):
-        self.sub: QWidget = sub_type(self)
+    def _open_sub_window(self, sub_type: AboutWindow | InfoWindow | EditorWindow, *args, **kwargs):
+        self.sub: QWidget = sub_type(self, *args, **kwargs)
         
         if isinstance(self.sub, AboutWindow):
             self.sub.exec()

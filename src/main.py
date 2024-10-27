@@ -4,13 +4,8 @@ from PySide6.QtWidgets import QApplication
 
 from windows.main_window import MainWindow
 
-# theme forms laita headereit 
-
-# kun taulukkoa muokataan ni tee valmiiks kaikki operaatiot lsita
-
-# make an executable using pyinstaller and put it in the inno installer
-# https://chatgpt.com/c/671663db-3748-8007-9ae1-f48bd786df01
-
+# python -m auto_py_to_exe
+# https://stackoverflow.com/a/13790741/
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

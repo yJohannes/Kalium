@@ -1,0 +1,69 @@
+.field
+{
+    background-color: [secondary];
+    border: 1px solid [field-hover];
+    border-radius: 4px;
+}
+
+.field:hover
+{
+    background-color: [field-hover];
+}
+
+.toolbutton
+{
+    padding: 9px 12px;
+    background-color: transparent;
+    color: [text];
+    font-size: 12px;
+    border: none;
+    border-radius: 0px;
+}
+
+.toolbutton::hover
+{
+    background-color: rgba(128, 128, 128, 50);
+    border: none;
+}
+
+.toolbutton:focus
+{
+    border: 1px solid [focus];
+    outline: none;
+}
+
+
+.toolbutton:checked
+{
+    border: none;
+}
+
+.toolbutton:checked:focus
+{
+    border: 1px solid [focus];
+    outline: none;
+}
+
+
+.danger-small:checked, .danger-small:pressed, .danger-small:focus
+{
+    border: 2px solid #FF4242;
+}
+
+.danger-small:hover
+{
+    border: 1px solid #FF4242;
+}
+
+
+.danger-big:hover
+{
+    background: 1px #FF4242;
+    color: white;
+    border: 2px solid #FF4242;
+}
+
+.danger-big:focus
+{
+    border: 2px solid #FF4242;
+}

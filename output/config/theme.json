@@ -1,0 +1,47 @@
+{
+	"mode": "light",
+	"dark": {
+		"accent": "#78a2de",
+		"primary": "#232323",
+		"secondary": "#181818",
+		"tertiary": "#292929",
+		"input": "#1c1c1c",
+		"field-hover": "#1e1e1e",
+		"text": "#FFFFFF",
+		"focus": "#FFFFFF",
+		"toolbar": "#090909"
+	},
+	"light": {
+		"accent": "#6582aa",
+		"primary": "#f0f0f0",
+		"secondary": "#dde2e7",
+		"tertiary": "#bfd2e1",
+		"input": "#ffffff",
+		"field-hover": "#bac6d6",
+		"text": "#000000",
+		"focus": "#4e77ff",
+		"toolbar": "#ffffff"
+	},
+	"custom": {
+		"accent": "#6582aa",
+		"primary": "#f0f0f0",
+		"secondary": "#dde2e7",
+		"tertiary": "#bfd2e1",
+		"input": "#ffffff",
+		"field-hover": "#bac6d6",
+		"text": "#000000",
+		"focus": "#4e77ff",
+		"toolbar": "#ffffff"
+	},
+	"earth": {
+		"accent": "#97ff8d",
+		"primary": "#21211f",
+		"secondary": "#272827",
+		"tertiary": "#54684d",
+		"input": "#1b1915",
+		"field-hover": "#3d3c2f",
+		"text": "#ffffff",
+		"focus": "#46b669",
+		"toolbar": "#272820"
+	}
+}

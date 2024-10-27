@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
     QGraphicsDropShadowEffect
 )
 
-from utils.resource_manager import load_and_concatenate
+from utils.resource_helpers import load_and_concatenate, resource_path
 from utils.json_manager import JSONManager
 from widgets import ColorPicker, ColorForm, HistoryScroll, MacroTable
 
@@ -20,10 +20,9 @@ from time import perf_counter
 
 class WindowUI:
     def __init__(self) -> None:
-        self.cwd = os.path.dirname(__file__)
-        self.style_folder_path = os.path.join(self.cwd, 'styles')
-        theme_path = os.path.join(self.cwd, '..', '..', 'config', 'theme.json')
-        
+        self.style_folder_path = resource_path("src/ui/styles")
+        theme_path = resource_path("config/theme.json")
+
         self.cached_stylesheet = None
         self.theme_manager = JSONManager(theme_path)
         self.mode = self.theme_manager.get_section("mode")
@@ -159,33 +158,36 @@ class WindowUI:
 
         #### SETTINGS ####
         settings_layout = QVBoxLayout()
+        settings_layout.setAlignment(Qt.AlignTop)
         self.settings_panel = QWidget()
         self.settings_panel.setLayout(settings_layout)
         self.settings_panel.setProperty("class", "panel")
 
-        settings_header = QLabel("Settings")
+        settings_header = QLabel("<h3><b>Settings</b></h3>")
         settings_header.setAlignment(Qt.AlignCenter)
-        settings_header.setProperty("class", "h1")
 
         mode_layout = QVBoxLayout()
         mode_field = QWidget()
+
         mode_field.setLayout(mode_layout)
         mode_field.setProperty("class", "field")
 
         self.mode_header = QLabel("Translation mode")
 
         mode_button_layout = QHBoxLayout()
-
-        self.mode_button_group = QButtonGroup(window) # no parent caused garbage collection
+        self.mode_button_group = QButtonGroup(window)
         self.mode_button_group.setExclusive(True)
 
         self.default_button = QPushButton("Default")
+        self.default_button.setProperty("mode", "default")
         self.default_button.setCheckable(True)
 
-        self.cas_button = QPushButton("CAS")
+        self.cas_button = QPushButton("TI-Nspire")
+        self.cas_button.setProperty("mode", "cas")
         self.cas_button.setCheckable(True)
 
         self.sc_button = QPushButton("SpeedCrunch")
+        self.sc_button.setProperty("mode", "speencrunch")
         self.sc_button.setCheckable(True)
 
         self.mode_button_group.addButton(self.cas_button)
@@ -222,38 +224,44 @@ class WindowUI:
 
         self.macro_table = MacroTable()
         self.macro_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+        macro_btn_layout = QHBoxLayout()
         self.add_macro = QPushButton("+")
+        self.open_macros_btn = QPushButton("Edit file")
+
+        macro_btn_layout.addWidget(self.add_macro, stretch=7)
+        macro_btn_layout.addWidget(self.open_macros_btn, stretch=2)
 
         macro_layout.addWidget(self.macro_table)
-        macro_layout.addWidget(self.add_macro)
+        macro_layout.addLayout(macro_btn_layout)
         self.macro_edit = QPlainTextEdit()
 
-        app_settings_layout = QGridLayout()
-        app_settings_field = QGroupBox()
-        app_settings_field.setLayout(app_settings_layout)
-        app_settings_field.setProperty("class", "field")
+        # app_settings_layout = QGridLayout()
+        # app_settings_field = QGroupBox()
+        # app_settings_field.setLayout(app_settings_layout)
+        # app_settings_field.setProperty("class", "field")
 
-        checkbox1 = QCheckBox("Checkbox 1")
-        checkbox2 = QCheckBox("Checkbox 2")
-        checkbox3 = QCheckBox("Checkbox 3")
-        self.cb_on_top = QCheckBox("Always on top")
+        # checkbox1 = QCheckBox("Checkbox 1")
+        # checkbox2 = QCheckBox("Checkbox 2")
+        # checkbox3 = QCheckBox("Checkbox 3")
+        # self.cb_on_top = QCheckBox("Always on top")
 
-        checkbox1.setLayoutDirection(Qt.RightToLeft)
-        checkbox2.setLayoutDirection(Qt.RightToLeft)
-        checkbox3.setLayoutDirection(Qt.RightToLeft)
-        self.cb_on_top.setLayoutDirection(Qt.RightToLeft)
+        # checkbox1.setLayoutDirection(Qt.RightToLeft)
+        # checkbox2.setLayoutDirection(Qt.RightToLeft)
+        # checkbox3.setLayoutDirection(Qt.RightToLeft)
+        # self.cb_on_top.setLayoutDirection(Qt.RightToLeft)
 
-        app_settings_layout.addWidget(checkbox1, 0, 0, alignment=Qt.AlignCenter)
-        app_settings_layout.addWidget(checkbox2, 0, 1, alignment=Qt.AlignCenter)
-        app_settings_layout.addWidget(checkbox3, 1, 0, alignment=Qt.AlignCenter)
-        app_settings_layout.addWidget(self.cb_on_top, 1, 1, alignment=Qt.AlignCenter)
+        # app_settings_layout.addWidget(checkbox1, 0, 0, alignment=Qt.AlignCenter)
+        # app_settings_layout.addWidget(checkbox2, 0, 1, alignment=Qt.AlignCenter)
+        # app_settings_layout.addWidget(checkbox3, 1, 0, alignment=Qt.AlignCenter)
+        # app_settings_layout.addWidget(self.cb_on_top, 1, 1, alignment=Qt.AlignCenter)
 
         settings_layout.addWidget(settings_header)
         settings_layout.addSpacing(5)
         settings_layout.addWidget(mode_field)
         settings_layout.addWidget(self.macro_field)
-        settings_layout.addWidget(app_settings_field)
-        settings_layout.addStretch(0)
+        # settings_layout.addWidget(app_settings_field)
+        # settings_layout.addStretch(0)
 
         #### HISTORY ####
         self.history_layout = QVBoxLayout()
@@ -261,9 +269,8 @@ class WindowUI:
         self.history_panel.setLayout(self.history_layout)
         self.history_panel.setProperty("class", "panel")
 
-        history_header = QLabel("History")
+        history_header = QLabel("<h3><b>History</b></h3>")
         history_header.setAlignment(Qt.AlignCenter)
-        history_header.setProperty("class", "h1")
 
 
         scroll_layout = QVBoxLayout()
@@ -297,9 +304,8 @@ class WindowUI:
         self.theme_panel.setLayout(theme_layout)
         self.theme_panel.setProperty("class", "panel")
 
-        theme_header = QLabel("Theme")
+        theme_header = QLabel("<h3><b>Theme</b></h3>")
         theme_header.setAlignment(Qt.AlignCenter)
-        theme_header.setProperty("class", "h1")
 
         picker_layout = QVBoxLayout()
         picker_field = QWidget()
@@ -331,26 +337,26 @@ class WindowUI:
 
         form_layout.addWidget(self.color_form)
 
-        # Names must be the same as in theme.json
         accent      = self.theme_manager.get_property(self.mode, "accent")
         primary     = self.theme_manager.get_property(self.mode, "primary")
         secondary   = self.theme_manager.get_property(self.mode, "secondary")
         tertiary    = self.theme_manager.get_property(self.mode, "tertiary")
-        _input      = self.theme_manager.get_property(self.mode, "input")
+        input_      = self.theme_manager.get_property(self.mode, "input")
         field_hover = self.theme_manager.get_property(self.mode, "field-hover")
         text        = self.theme_manager.get_property(self.mode, "text")
         focus       = self.theme_manager.get_property(self.mode, "focus")
         toolbar     = self.theme_manager.get_property(self.mode, "toolbar")
 
-        self.color_form.createRow("Accent:",    "accent",    QColor(accent))
-        self.color_form.createRow("Primary:",   "primary",   QColor(primary))
-        self.color_form.createRow("Secondary:", "secondary", QColor(secondary))
-        self.color_form.createRow("Tertiary:",  "tertiary",  QColor(tertiary))
-        self.color_form.createRow("Input:",     "input",     QColor(_input))
-        self.color_form.createRow("Field hover:", "field-hover", QColor(field_hover))
-        self.color_form.createRow("Text:",      "text",      QColor(text))
-        self.color_form.createRow("Focus:",     "focus",     QColor(focus))
-        self.color_form.createRow("Toolbar:",   "toolbar",   QColor(toolbar))
+        # Object names must be the same as in theme.json
+        self.color_form.create_row("Accent:",    "accent",    QColor(accent))
+        self.color_form.create_row("Primary:",   "primary",   QColor(primary))
+        self.color_form.create_row("Secondary:", "secondary", QColor(secondary))
+        self.color_form.create_row("Tertiary:",  "tertiary",  QColor(tertiary))
+        self.color_form.create_row("Input:",     "input",     QColor(input_))
+        self.color_form.create_row("Field hover:", "field-hover", QColor(field_hover))
+        self.color_form.create_row("Text:",      "text",      QColor(text))
+        self.color_form.create_row("Focus:",     "focus",     QColor(focus))
+        self.color_form.create_row("Toolbar:",   "toolbar",   QColor(toolbar))
 
         theme_mode_layout = QHBoxLayout()
         self.theme_mode_field = QWidget()
@@ -360,28 +366,26 @@ class WindowUI:
 
         self.dark = QRadioButton("Dark")
         self.light = QRadioButton("Light")
-        self.custom = QRadioButton("Custom")
+        # self.custom = QRadioButton("Custom")
 
         self.dark.setFocusPolicy(Qt.TabFocus)
         self.light.setFocusPolicy(Qt.TabFocus)
-        self.custom.setFocusPolicy(Qt.TabFocus)
+        # self.custom.setFocusPolicy(Qt.TabFocus)
 
         mode_group = QButtonGroup(window)
-
+        mode_group.setExclusive(True)
         mode_group.addButton(self.dark)
         mode_group.addButton(self.light)
-        mode_group.addButton(self.custom)
+        # mode_group.addButton(self.custom)
 
         match self.mode:
             case "dark": self.dark.setChecked(True); self.color_form.lock_boxes(True)
             case "light": self.light.setChecked(True); self.color_form.lock_boxes(True)
-            case "custom": self.custom.setChecked(True)
+            # case "custom": self.custom.setChecked(True)
 
-        mode_group.setExclusive(True)
-
-        theme_mode_layout.addWidget(self.dark)
-        theme_mode_layout.addWidget(self.light)
-        theme_mode_layout.addWidget(self.custom)
+        theme_mode_layout.addWidget(self.dark, alignment=Qt.AlignCenter)
+        theme_mode_layout.addWidget(self.light, alignment=Qt.AlignCenter)
+        # theme_mode_layout.addWidget(self.custom, alignment=Qt.AlignCenter)
 
         self.theme_mode_field.setLayout(theme_mode_layout)
 
@@ -407,8 +411,6 @@ class WindowUI:
             elif isinstance(widget, QCheckBox):
                 widget.setFocusPolicy(Qt.TabFocus)
 
-
-
         self.progressbar.setGraphicsEffect(self._shadow(self.progressbar, shadow_color))
         # self.i_text_edit.setGraphicsEffect(self._shadow(self.i_text_edit, shadow_color))
         # self.o_text_edit.setGraphicsEffect(self._shadow(self.o_text_edit, shadow_color))
@@ -420,3 +422,4 @@ class WindowUI:
         shadow_effect.setYOffset(0)
         shadow_effect.setColor(color)
         return shadow_effect
+    
