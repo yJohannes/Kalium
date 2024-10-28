@@ -52,9 +52,11 @@ class InfoWindow(QDialog):
             ("Ctrl + Shift + T", "Copy color picker color"),
             ("Ctrl + Shift + D", "Set dark mode"),
             ("Ctrl + Shift + L", "Set light mode"),
-            ("Legacy hotkeys", ""),
+            ("TI-Nspire extra hotkeys", ""),
+            ("Ctrl + K", "Apply TI-Nspire constants"),
             ("Ctrl + G", "Translate g to _g"),
-            ("Ctrl + K", "Apply TI-Nspire constants")
+            ("Ctrl + E", "Translate e to @e"),
+            ("Ctrl + I", "Translate i to @i")
         ]
 
         for key_combination, action in data:

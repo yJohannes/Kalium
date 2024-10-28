@@ -3,6 +3,7 @@ import sys
 
 def resource_path(relative_path):
     """Get absolute path to resource in dev and in exe"""
+    relative_path = relative_path.replace("/", "\\")
     try:
         # PyInstaller creates a temp folder and stores the path in _MEIPASS
         base_path = sys._MEIPASS

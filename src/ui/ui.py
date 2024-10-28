@@ -1,11 +1,11 @@
 import os
 
-from PySide6.QtCore import Qt, QTimer, Signal
-from PySide6.QtGui import QColor, QFont
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtGui import QColor
 
 from PySide6.QtWidgets import (
     QApplication, QMainWindow,
-    QSplitter, QHBoxLayout, QVBoxLayout, QGridLayout, QGroupBox, QButtonGroup,
+    QSplitter, QHBoxLayout, QVBoxLayout, QButtonGroup,
     QWidget, QPushButton, QRadioButton, QCheckBox,
     QPlainTextEdit, QLineEdit, QLabel,
     QSizePolicy, QProgressBar, QToolBar,
@@ -15,8 +15,6 @@ from PySide6.QtWidgets import (
 from utils.resource_helpers import load_and_concatenate, resource_path
 from utils.json_manager import JSONManager
 from widgets import ColorPicker, ColorForm, HistoryScroll, MacroTable
-
-from time import perf_counter
 
 class WindowUI:
     def __init__(self) -> None:
@@ -69,16 +67,16 @@ class WindowUI:
         self.theme_manager.save_data()
 
     def init_ui(self, window: QMainWindow):
-        self.central_widget = QWidget()
-
-        window.setProperty("class", "window")
-        window.setCentralWidget(self.central_widget)
-
-        layout = QVBoxLayout(self.central_widget)
-        layout.setContentsMargins(0, 0, 0, 0)
-
-        shadow_color = QColor("#78a2de")
-        #### TOOL BAR ####
+        self._init_toolbar(window)
+        self._init_io()
+        self._init_settings(window)
+        self._init_history()
+        self._init_theme(window)
+        self._finish_init(window)
+        self._set_graphics_effects()
+        return
+    
+    def _init_toolbar(self, window):
         tb_layout = QHBoxLayout()
         tb_layout.setContentsMargins(0,0,0,0)
         tb_layout.setSpacing(0)
@@ -114,7 +112,7 @@ class WindowUI:
         self.toolbar.setContextMenuPolicy(Qt.PreventContextMenu)
         window.addToolBar(Qt.BottomToolBarArea, self.toolbar)
 
-        #### IO ####
+    def _init_io(self):
         io_layout = QVBoxLayout()
         io_layout.setContentsMargins(0,0,0,0)
         io_layout.setAlignment(Qt.AlignCenter)
@@ -155,8 +153,9 @@ class WindowUI:
         io_layout.addWidget(self.progressbar)
         io_layout.addLayout(io_widget_container)
         io_layout.addStretch()
+        return
 
-        #### SETTINGS ####
+    def _init_settings(self, window):
         settings_layout = QVBoxLayout()
         settings_layout.setAlignment(Qt.AlignTop)
         self.settings_panel = QWidget()
@@ -214,6 +213,8 @@ class WindowUI:
 
         self.show_macros_button = QPushButton("✕")
         self.show_macros_button.setProperty("class", "toolbutton")
+        self.show_macros_button.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+
 
         macro_control_layout.addWidget(macro_label)
         macro_control_layout.addStretch()
@@ -234,26 +235,20 @@ class WindowUI:
         macro_layout.addWidget(self.macro_table)
         macro_layout.addLayout(macro_btn_layout)
 
-        # app_settings_layout = QGridLayout()
-        # app_settings_field = QGroupBox()
-        # app_settings_field.setLayout(app_settings_layout)
-        # app_settings_field.setProperty("class", "field")
-
-
         legacy_layout = QVBoxLayout()
         legacy_field = QWidget()
         legacy_field.setLayout(legacy_layout)
         legacy_field.setProperty("class", "field")
 
-
         legacy_control_layout = QHBoxLayout()
         legacy_control_layout.setContentsMargins(0,0,0,0)
         legacy_control_layout.setSpacing(0)
 
-        legacy_label = QLabel("Legacy settings")
+        legacy_label = QLabel("TI-Nspire extras")
 
         self.show_legacy = QPushButton("✕")
         self.show_legacy.setProperty("class", "toolbutton")
+        self.show_legacy.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
         legacy_control_layout.addWidget(legacy_label)
         legacy_control_layout.addStretch()
@@ -261,8 +256,8 @@ class WindowUI:
 
         legacy_layout.addLayout(legacy_control_layout)
 
-        # self.legacy = QPushButton("Legacy hotkeys")
-        # self.legacy.setCheckable(True)
+        self.legacy_buttons = QButtonGroup()
+        self.legacy_buttons.setExclusive(False)
 
         const_g_layout = QHBoxLayout()
         self.constants = QPushButton("Nspire constants")
@@ -272,16 +267,30 @@ class WindowUI:
         const_g_layout.addWidget(self.constants, stretch=10)
         const_g_layout.addWidget(self.g, stretch=3)
 
-        # legacy_layout.addWidget(self.legacy)
+        ei_layout = QHBoxLayout()
+        self.e = QPushButton("e to @e")
+        self.i = QPushButton("i to @i")
+        self.e.setCheckable(True)
+        self.i.setCheckable(True)
+        ei_layout.addWidget(self.e)
+        ei_layout.addWidget(self.i)
+        
+        self.legacy_buttons.addButton(self.constants)
+        self.legacy_buttons.addButton(self.g)
+        self.legacy_buttons.addButton(self.e)
+        self.legacy_buttons.addButton(self.i)
+
         legacy_layout.addLayout(const_g_layout)
+        legacy_layout.addLayout(ei_layout)
 
         settings_layout.addWidget(settings_header)
         settings_layout.addSpacing(5)
         settings_layout.addWidget(mode_field)
         settings_layout.addWidget(self.macro_field)
         settings_layout.addWidget(legacy_field)
+        return
 
-        #### HISTORY ####
+    def _init_history(self):
         self.history_layout = QVBoxLayout()
         self.history_panel = QWidget()
         self.history_panel.setLayout(self.history_layout)
@@ -289,7 +298,6 @@ class WindowUI:
 
         history_header = QLabel("<h3><b>History</b></h3>")
         history_header.setAlignment(Qt.AlignCenter)
-
 
         scroll_layout = QVBoxLayout()
         scroll_field = QWidget()
@@ -316,7 +324,7 @@ class WindowUI:
         self.history_layout.addSpacing(8)
         self.history_layout.addWidget(scroll_field)
 
-        #### THEME ####
+    def _init_theme(self, window):
         theme_layout = QVBoxLayout()
         self.theme_panel = QWidget()
         self.theme_panel.setLayout(theme_layout)
@@ -384,26 +392,21 @@ class WindowUI:
 
         self.dark = QRadioButton("Dark")
         self.light = QRadioButton("Light")
-        # self.custom = QRadioButton("Custom")
 
         self.dark.setFocusPolicy(Qt.TabFocus)
         self.light.setFocusPolicy(Qt.TabFocus)
-        # self.custom.setFocusPolicy(Qt.TabFocus)
 
         mode_group = QButtonGroup(window)
         mode_group.setExclusive(True)
         mode_group.addButton(self.dark)
         mode_group.addButton(self.light)
-        # mode_group.addButton(self.custom)
 
         match self.mode:
             case "dark": self.dark.setChecked(True); self.color_form.lock_boxes(True)
             case "light": self.light.setChecked(True); self.color_form.lock_boxes(True)
-            # case "custom": self.custom.setChecked(True)
 
         theme_mode_layout.addWidget(self.dark, alignment=Qt.AlignCenter)
         theme_mode_layout.addWidget(self.light, alignment=Qt.AlignCenter)
-        # theme_mode_layout.addWidget(self.custom, alignment=Qt.AlignCenter)
 
         self.theme_mode_field.setLayout(theme_mode_layout)
 
@@ -412,15 +415,24 @@ class WindowUI:
         theme_layout.addWidget(self.form_container)
         theme_layout.addWidget(mode_label)
         theme_layout.addWidget(self.theme_mode_field)
+        return
 
-        #### FINISH ####
+    def _finish_init(self, window):
         self.splitter = QSplitter(Qt.Horizontal)
         self.splitter.setSizes([4, 3]) # initial split ratio
 
         self.splitter.addWidget(self.io_panel)
         self.splitter.addWidget(self.settings_panel)
 
-        layout.addWidget(self.splitter)
+        self.layout = QVBoxLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.addWidget(self.splitter)
+
+        self.central_widget = QWidget()
+        self.central_widget.setLayout(self.layout)
+
+        window.setProperty("class", "window")
+        window.setCentralWidget(self.central_widget)
 
         for widget in QApplication.allWidgets():
             if isinstance(widget, QPushButton):
@@ -428,12 +440,12 @@ class WindowUI:
                 widget.setAutoDefault(True)
             elif isinstance(widget, QCheckBox):
                 widget.setFocusPolicy(Qt.TabFocus)
+        return
 
-        self.progressbar.setGraphicsEffect(self._shadow(self.progressbar, shadow_color))
-        # self.i_text_edit.setGraphicsEffect(self._shadow(self.i_text_edit, shadow_color))
-        # self.o_text_edit.setGraphicsEffect(self._shadow(self.o_text_edit, shadow_color))
+    def _set_graphics_effects(self):
+        self.progressbar.setGraphicsEffect(self._get_shadow(self.progressbar, QColor("#78a2de")))
 
-    def _shadow(self, parent, color: QColor, radius=20) -> QGraphicsDropShadowEffect:
+    def _get_shadow(self, parent, color: QColor, radius=20) -> QGraphicsDropShadowEffect:
         shadow_effect = QGraphicsDropShadowEffect(parent)
         shadow_effect.setBlurRadius(radius)
         shadow_effect.setXOffset(0)

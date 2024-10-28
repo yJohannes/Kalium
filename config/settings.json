@@ -1,19 +1,25 @@
 {
 	"window": {
 		"position": [
-			227,
-			59
+			276,
+			85
 		],
 		"dimensions": [
-			817,
-			618
+			737,
+			567
 		]
 	},
 	"settings": {
 		"mode": "cas"
 	},
+	"toggles": {
+		"macros": false,
+		"legacy": false
+	},
 	"legacy": {
 		"constants": false,
-		"g": false
+		"g": false,
+		"e": false,
+		"i": false
 	}
 }

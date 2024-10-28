@@ -3,6 +3,7 @@ import os
 
 class JSONManager():
     def __init__(self, filepath=None):
+        self.default_data = None
         self.filepath = filepath
         if self.filepath:
             self.data: dict | list = self.load_data(self.filepath)
@@ -73,7 +74,8 @@ class JSONManager():
         return
 
     def _create_default_data_file(self) -> None:
-        os.makedirs(os.path.dirname(self.filepath), exist_ok=True)
-        with open(self.filepath, 'w', encoding='utf-8') as json_file:
-            json.dump(self.default_data, json_file, indent='\t')
+        if self.default_data:
+            os.makedirs(os.path.dirname(self.filepath), exist_ok=True)
+            with open(self.filepath, 'w', encoding='utf-8') as json_file:
+                json.dump(self.default_data, json_file, indent='\t')
         return

@@ -1,12 +1,11 @@
-import sys
-import os
 import asyncio
 
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QSizePolicy
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget
 from PySide6.QtCore import Qt, QPoint, QEvent
 from PySide6.QtGui import QClipboard, QKeySequence, QShortcut, QIcon, QColor
 
 from ui.ui import WindowUI
+from widgets.message_boxes import new_error_box
 from windows.sub_windows import AboutWindow, InfoWindow, EditorWindow
 from utils.json_manager import JSONManager
 from utils.resource_helpers import resource_path
@@ -15,15 +14,13 @@ from engine.old_engine import translate
 class MainWindow(QMainWindow):
     clipboard = QClipboard()
     async_tasks = []
-    dialogs = []
 
     def __init__(self):
         super().__init__()
-        QApplication.instance().setAttribute(Qt.AA_EnableHighDpiScaling)
         self.setWindowTitle("Kalium")
-        
-        icon = QIcon(resource_path("img\logo2.png"))
+        icon = QIcon(resource_path("img/logo2.png"))
         QApplication.instance().setWindowIcon(icon)
+        QApplication.instance().setAttribute(Qt.AA_EnableHighDpiScaling)
 
         settings = resource_path("config/settings.json")
         history = resource_path("data/history.json")
@@ -41,132 +38,63 @@ class MainWindow(QMainWindow):
         return
     
     def _init_signals(self):
+        self._setup_toolbar_signals()
+        self._setup_text_edit_signals()
+        self._setup_macro_signals()
+        self._setup_misc_controls()
+        self._setup_history_signals()
+        self._setup_theme_signals()
+        self._setup_shortcuts()
+        self.installEventFilter(self)
+        return
+    
+    def _setup_misc_controls(self):
+        self.ui.mode_button_group.buttonToggled.connect(self._on_translation_mode_changed)
+        self.ui.macro_table.macrosChanged.connect(lambda: self._start_translation())
+
+        self.ui.paste_button.clicked.connect(self._paste_text)
+        self.ui.copy_button.clicked.connect(self._copy_text)
+        self.ui.quick_button.clicked.connect(self._quick_translate)
+
+        self.ui.show_legacy.clicked.connect(lambda: self._toggle_legacy_controls(not self.ui.g.isVisible()))
+        self.ui.legacy_buttons.buttonToggled.connect(self._start_translation)
+        return
+    
+    def _setup_toolbar_signals(self):
         tb = self.ui.toolbar
-        tb.mousePressEvent   = self.drag_start
-        tb.mouseMoveEvent    = self.drag
+        tb.mousePressEvent = self.drag_start
+        tb.mouseMoveEvent = self.drag
         tb.mouseReleaseEvent = self.drag_end
-        
+
+        self.ui.settings_button.clicked.connect(lambda: self._change_panel(self.ui.settings_panel))
+        self.ui.history_button.clicked.connect(lambda: self._change_panel(self.ui.history_panel))
+        self.ui.theme_button.clicked.connect(lambda: self._change_panel(self.ui.theme_panel))
+        self.ui.about_button.clicked.connect(lambda: self._open_sub_window(AboutWindow))
+        self.ui.info_button.clicked.connect(lambda: self._open_sub_window(InfoWindow))
+        return
+
+    def _setup_text_edit_signals(self):
         ie_ref = self.ui.i_text_edit
         oe_ref = self.ui.o_text_edit
         
         ie_ref.keyPressEvent = lambda event: self.tab_event(ie_ref, event)
         oe_ref.keyPressEvent = lambda event: self.tab_event(oe_ref, event)
+        ie_ref.textChanged.connect(lambda: self._start_translation())
+        return
 
-        def start_translation():
-            translation = translate(
-                ie_ref.toPlainText(),
-                TI_on=self.ui.cas_button.isChecked(),
-                SC_on=self.ui.sc_button.isChecked(),
-                constants_on=self.ui.constants.isChecked(),
-                g_on=self.ui.g.isChecked()
-            )
-            for macro in self.ui.macro_table.get_data():
-                if macro[2] and macro[0] != "":
-                    translation = translation.replace(macro[0], macro[1])
-            oe_ref.setPlainText(translation)
-            self._start_animation(self._animate_progressbar)
-            print("aliutettu")
-            return
-        
-        def mode_changed(btn, on):
-            if on:
-                self.translation_mode = btn.property("mode")
-                start_translation()
-            return
-
-        ie_ref.textChanged.connect(lambda: start_translation())
-        self.ui.mode_button_group.buttonToggled.connect(mode_changed)
-        self.ui.macro_table.macrosChanged.connect(lambda: start_translation())
-
-        def copy() -> None:
-            _in = self.ui.i_text_edit.toPlainText()
-            _out = self.ui.o_text_edit.toPlainText()
-            self.clipboard.setText(_out)
-            if _out:
-                self.history_manager.append([_in, _out])
-                self.ui.history_scroll.append(_in, _out)
-            return
-
-        paste = lambda: self.ui.i_text_edit.setPlainText(QApplication.clipboard().text())
-        quick = lambda: (paste(), copy()) # input edit textChanged gets connected in between
-
-        self.ui.paste_button.clicked.connect(paste)
-        self.ui.copy_button.clicked.connect(copy)
-        self.ui.quick_button.clicked.connect(quick)
-
-        def show_macros():
-            vis = self.ui.macro_table.isVisible()
-            self.ui.show_macros_button.setText("☰") if vis else self.ui.show_macros_button.setText("✕")
-            self.ui.macro_table.setVisible(not vis)
-            self.ui.add_macro.setVisible(not vis)
-            self.ui.open_macros_btn.setVisible(not vis)
-
-        self.ui.show_macros_button.clicked.connect(show_macros)
-        self.ui.add_macro.clicked.connect(lambda _: self.ui.macro_table.add_row())
-
-        def open_file_editor(file_path, callback):
-            editor = EditorWindow(self, file_path=file_path)
-            editor.fileSaved.connect(callback)
-            editor.show()
-
-        def update_macro_table():
-            self.macro_manager.update()
-            self.ui.macro_table.set_data(self.macro_manager.data)
-
-        self.ui.open_macros_btn.clicked.connect(lambda: open_file_editor(resource_path("data/macros.json"), update_macro_table))
-        self.ui.macro_table.macrosChanged.connect(lambda data: self.macro_manager.set_data(data))
-
-        def show_legacy():
-            vis = self.ui.g.isVisible()
-            self.ui.show_legacy.setText("☰") if vis else self.ui.show_legacy.setText("✕")
-            # self.ui.legacy.setVisible(not vis)
-            self.ui.constants.setVisible(not vis)
-            self.ui.g.setVisible(not vis)
-        self.ui.show_legacy.clicked.connect(show_legacy)
-
-        open_settings = lambda: self._change_panel(self.ui.settings_panel)
-        open_history = lambda: self._change_panel(self.ui.history_panel)
-        open_theme = lambda: self._change_panel(self.ui.theme_panel)
-
-        self.ui.settings_button.clicked.connect(open_settings)
-        self.ui.history_button.clicked.connect(open_history)
-        self.ui.theme_button.clicked.connect(open_theme)
-        self.ui.about_button.clicked.connect(lambda: self._open_sub_window(AboutWindow))
-        self.ui.info_button.clicked.connect(lambda: self._open_sub_window(InfoWindow))
-
-        copy_color = lambda: self.clipboard.setText(self.ui.color_line.text())
-        self.ui.copy_color_button.clicked.connect(copy_color)
-
+    def _setup_theme_signals(self):
+        self.ui.copy_color_button.clicked.connect(self._copy_picker_color)
         def on_picker_color_changed(color):
             self.ui.color_form.set_focused_box_color(color),
             self.ui.color_line.setText(color.name())
 
         self.ui.color_picker.colorChanged.connect(on_picker_color_changed)
         self.ui.color_form.boxPressed.connect(lambda box: self.ui.color_picker.set_color(self.ui.color_form.get_box_color(box)))
+        self.ui.dark.toggled.connect(lambda: self._choose_theme_mode("dark"))
+        self.ui.light.toggled.connect(lambda: self._choose_theme_mode("light"))
+        return
 
-        def update_color(target, color):
-            self.ui.theme_manager.set_property("custom", target, color.name())
-            self.ui.request_style_update()
-
-        self.ui.color_form.colorChanged.connect(update_color)
-
-        def choose_mode(mode: str):
-            if self.ui.mode == mode: return
-            match mode:
-                case "dark" | "light":
-                    self.ui.color_form.lock_boxes(True)
-                case "custom":
-                    self.ui.color_form.lock_boxes(False)
-            
-            self.ui.load_style(mode)
-            print(mode)
-            self.ui.color_form.set_box_colors([QColor(color) for color in self.ui.theme_manager.get_section(mode).values()])
-            return
-
-        self.ui.dark.toggled.connect(lambda: choose_mode("dark"))
-        self.ui.light.toggled.connect(lambda: choose_mode("light"))
-        # self.ui.custom.toggled.connect(lambda: choose_mode("custom"))
-
+    def _setup_history_signals(self):
         def load_history_text(data):
             latex, translation = data
             self.ui.i_text_edit.blockSignals(True)
@@ -179,33 +107,128 @@ class MainWindow(QMainWindow):
         self.ui.history_scroll.historyCleared.connect(lambda: self.ui.history_del.setChecked(False))
         self.ui.history_del.toggled.connect(self.ui.history_scroll.deleting_mode)
         self.ui.history_clear.pressed.connect(self.ui.history_scroll.clear)
+        return
 
+    def _setup_macro_signals(self):
+        self.ui.open_macros_btn.clicked.connect(lambda: self._open_file_editor(resource_path("data/macros.json"), self._update_macro_table))
+        self.ui.macro_table.macrosChanged.connect(lambda data: self.macro_manager.set_data(data))
+        self.ui.show_macros_button.clicked.connect(lambda: self._toggle_macros(not self.ui.macro_table.isVisible()))
+        self.ui.add_macro.clicked.connect(lambda _: self.ui.macro_table.add_row())
+        return
+
+    def _open_file_editor(self, file_path, callback):
+        editor = EditorWindow(parent=self, file_path=file_path)
+        editor.fileSaved.connect(lambda: callback(editor.backup))
+        editor.show()
+        return
+
+    def _setup_shortcuts(self):
         key_map = {
-            "Ctrl+Shift+C": copy,
-            "Ctrl+R": copy,
-            "Ctrl+P": paste,
-            "Ctrl+Q": quick,
+            "Ctrl+Shift+C": self._copy_text,
+            "Ctrl+R":       self._copy_text,
+            "Ctrl+P":       self._paste_text,
+            "Ctrl+Q":       self._quick_translate,
             "Ctrl+Shift+Z": lambda: self.ui.settings_button.setFocus(),
-            "Ctrl+,": open_settings,
-            "Ctrl+O": open_settings,
-            "Ctrl+1": lambda: self.ui.default_button.setChecked(True),
-            "Ctrl+2": lambda: self.ui.cas_button.setChecked(True),
-            "Ctrl+3": lambda: self.ui.sc_button.setChecked(True),
-            "Ctrl+H": open_history,
-            "Ctrl+T": open_theme,
-            "Ctrl+Shift+T": copy_color,
+            "Ctrl+,":       lambda: self._change_panel(self.ui.settings_panel),
+            "Ctrl+O":       lambda: self._change_panel(self.ui.settings_panel),
+            "Ctrl+1":       lambda: self.ui.default_button.setChecked(True),
+            "Ctrl+2":       lambda: self.ui.cas_button.setChecked(True),
+            "Ctrl+3":       lambda: self.ui.sc_button.setChecked(True),
+            "Ctrl+H":       lambda: self._change_panel(self.ui.history_panel),
+            "Ctrl+T":       lambda: self._change_panel(self.ui.theme_panel),
+            "Ctrl+Shift+T": self._copy_picker_color,
             "Ctrl+Shift+D": lambda: self.ui.dark.setChecked(True),
             "Ctrl+Shift+L": lambda: self.ui.light.setChecked(True),
-            "Ctrl+G": lambda: self.ui.g.setChecked(not self.ui.g.isChecked()),
-            "Ctrl+K": lambda: self.ui.constants.setChecked(not self.ui.constants.isChecked())
+            "Ctrl+K":       lambda: self.ui.constants.setChecked(not self.ui.constants.isChecked()),
+            "Ctrl+G":       lambda: self.ui.g.setChecked(not self.ui.g.isChecked()),
+            "Ctrl+E":       lambda: self.ui.e.setChecked(not self.ui.e.isChecked()),
+            "Ctrl+I":       lambda: self.ui.i.setChecked(not self.ui.i.isChecked())
         }
 
         for (key, connection) in key_map.items():
             QShortcut(QKeySequence(key), self).activated.connect(connection)
+        return
 
-        self.installEventFilter(self)
+    def _copy_picker_color(self) -> None:
+        return self.clipboard.setText(self.ui.color_line.text())
+
+    def _choose_theme_mode(self, mode: str):
+        if self.ui.mode == mode: return
+        match mode:
+            case "dark" | "light":
+                self.ui.color_form.lock_boxes(True)
+            case "custom":
+                self.ui.color_form.lock_boxes(False)
+        
+        self.ui.load_style(mode)
+        self.ui.color_form.set_box_colors([QColor(color) for color in self.ui.theme_manager.get_section(mode).values()])
+        return
+
+    def _copy_text(self):
+        _in = self.ui.i_text_edit.toPlainText()
+        _out = self.ui.o_text_edit.toPlainText()
+        self.clipboard.setText(_out)
+        if _out:
+            self.history_manager.append([_in, _out])
+            self.ui.history_scroll.append(_in, _out)
         return
     
+    def _paste_text(self):
+        self.ui.i_text_edit.setPlainText(QApplication.clipboard().text())
+        return
+
+    def _quick_translate(self):
+        self._paste_text()
+        self._copy_text()
+        return
+
+    def _start_translation(self):
+        translation = translate(
+            self.ui.i_text_edit.toPlainText(),
+            TI_on=self.ui.cas_button.isChecked(),
+            SC_on=self.ui.sc_button.isChecked(),
+            constants_on=self.ui.constants.isChecked(),
+            g_on=self.ui.g.isChecked(),
+            i_on=self.ui.i.isChecked(),
+            e_on=self.ui.e.isChecked()
+        )
+        for macro in self.ui.macro_table.get_data():
+            if macro[2] and macro[0] != "":
+                translation = translation.replace(macro[0], macro[1])
+        self.ui.o_text_edit.setPlainText(translation)
+        self._start_animation(self._animate_progressbar)
+        return
+
+    def _on_translation_mode_changed(self, btn, on):
+        if on:
+            self.translation_mode = btn.property("mode")
+            self._start_translation()
+        return
+    
+    def _update_macro_table(self, backup):
+        self.macro_manager.update()
+        try:
+            self.ui.macro_table.set_data(self.macro_manager.data)
+        except Exception:
+            self.ui.macro_table.set_data(backup)
+            new_error_box(self, "Invalid JSON structure. Changes not saved.")
+        return
+
+    def _toggle_macros(self, show: bool):
+        self.ui.show_macros_button.setText("✕") if show else self.ui.show_macros_button.setText("☰")
+        self.ui.macro_table.setVisible(show)
+        self.ui.add_macro.setVisible(show)
+        self.ui.open_macros_btn.setVisible(show)
+        return
+
+    def _toggle_legacy_controls(self, show: bool):
+        self.ui.show_legacy.setText("✕") if show else self.ui.show_legacy.setText("☰")
+        self.ui.constants.setVisible(show)
+        self.ui.g.setVisible(show)
+        self.ui.e.setVisible(show)
+        self.ui.i.setVisible(show)
+        return
+
     def _load_data(self):
         x, y = self.settings_manager.get_property("window", "position")
         w, h = self.settings_manager.get_property("window", "dimensions")
@@ -214,13 +237,18 @@ class MainWindow(QMainWindow):
         for btn in self.ui.mode_button_group.buttons():
             if btn.property("mode") == self.translation_mode:
                 btn.setChecked(True)
+
+        self._toggle_legacy_controls(self.settings_manager.get_property("toggles", "legacy"))
+        self._toggle_macros(self.settings_manager.get_property("toggles", "macros"))
         
-        # self.ui.legacy.setChecked(self.settings_manager.get_property("legacy", "hotkeys"))
         self.ui.constants.setChecked(self.settings_manager.get_property("legacy", "constants"))
         self.ui.g.setChecked(self.settings_manager.get_property("legacy", "g"))
+        self.ui.e.setChecked(self.settings_manager.get_property("legacy", "e"))
+        self.ui.i.setChecked(self.settings_manager.get_property("legacy", "i"))
 
         self.ui.history_scroll.append_list(self.history_manager.data)
         self.ui.macro_table.set_data(self.macro_manager.data)
+        return
 
     def _save_data(self):
         self.ui.save_colors()
@@ -230,14 +258,19 @@ class MainWindow(QMainWindow):
         self.settings_manager.set_property("window", "position", [geo.x(), geo.y()])
         self.settings_manager.set_property("window", "dimensions", [geo.width(), geo.height()])
         self.settings_manager.set_property("settings", "mode", self.translation_mode)
-        # self.settings_manager.set_property("legacy", "hotkeys", self.ui.legacy.isChecked())
+
+        self.settings_manager.set_property("toggles", "macros", self.ui.macro_table.isVisible())
+        self.settings_manager.set_property("toggles", "legacy", self.ui.g.isVisible())
+
         self.settings_manager.set_property("legacy", "g", self.ui.g.isChecked())
+        self.settings_manager.set_property("legacy", "e", self.ui.e.isChecked())
+        self.settings_manager.set_property("legacy", "i", self.ui.i.isChecked())
         self.settings_manager.set_property("legacy", "constants", self.ui.constants.isChecked())
 
         self.settings_manager.save_data()
         self.history_manager.save_data()
         self.macro_manager.save_data()
-
+        return
 
     def _change_panel(self, panel: QWidget):
         if self.ui.splitter.widget(1) is not panel:
@@ -256,6 +289,24 @@ class MainWindow(QMainWindow):
         new_task = loop.create_task(animation())
         self.async_tasks.append(new_task)
         return 
+
+    def eventFilter(self, source, event) -> bool:
+        if event.type() == QEvent.MouseButtonPress:
+            self.clearFocus()
+            # Set focus back to the main window
+            self.setFocus(Qt.OtherFocusReason)  
+            return True # Event handled
+        
+        return super().eventFilter(source, event)
+
+    def _open_sub_window(self, sub_type: AboutWindow | InfoWindow | EditorWindow, *args, **kwargs):
+        self.sub: QWidget = sub_type(self, *args, **kwargs)
+        
+        if isinstance(self.sub, AboutWindow):
+            self.sub.exec()
+        else:
+            self.sub.show()
+        return
 
     async def _animate_progressbar(self):
         try:
@@ -282,24 +333,6 @@ class MainWindow(QMainWindow):
             self.ui.progressbar.setValue(0)
             self.ui.progressbar.setLayoutDirection(Qt.LeftToRight)
             raise
-
-    def eventFilter(self, source, event) -> bool:
-        if event.type() == QEvent.MouseButtonPress:
-            self.clearFocus()
-            # Set focus back to the main window
-            self.setFocus(Qt.OtherFocusReason)  
-            return True  # Event handled
-        
-        return super().eventFilter(source, event)
-
-    def _open_sub_window(self, sub_type: AboutWindow | InfoWindow | EditorWindow, *args, **kwargs):
-        self.sub: QWidget = sub_type(self, *args, **kwargs)
-        
-        if isinstance(self.sub, AboutWindow):
-            self.sub.exec()
-        else:
-            self.sub.show()
-        return
 
     def tab_event(self, window_widget, event: QEvent):
         if event.key() == Qt.Key_Tab:

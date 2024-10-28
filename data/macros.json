@@ -1,15 +1,5 @@
 [
 	[
-		"e",
-		"@e",
-		false
-	],
-	[
-		"i",
-		"@i",
-		false
-	],
-	[
 		"k",
 		"_Cc",
 		false
@@ -27,51 +17,16 @@
 	[
 		"\\ldots",
 		"",
-		true
+		false
 	],
 	[
 		"\\dots",
 		"",
-		true
+		false
 	],
 	[
 		"...",
 		"",
-		true
-	],
-	[
-		"syst@em",
-		"system",
-		true
-	],
-	[
-		"c@il",
-		"ceil",
-		true
-	],
-	[
-		"s@ec",
-		"sec",
-		true
-	],
-	[
-		"s@in",
-		"sin",
-		true
-	],
-	[
-		"l@im",
-		"lim",
-		true
-	],
-	[
-		"ce@il",
-		"ceil",
-		true
-	],
-	[
-		"@int",
-		"int",
 		true
 	]
 ]

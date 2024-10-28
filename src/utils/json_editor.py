@@ -126,7 +126,7 @@ class JSONEditor(QPlainTextEdit):
         self.cursorPositionChanged.connect(self.highlight_current_line)
         return
 
-    def load_json(self, path):
+    def load_json(self, path: str):
         data = self.json_manager.load_data(path)
         self.setPlainText(json.dumps(data, indent="\t"))
     
