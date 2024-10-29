@@ -6,11 +6,12 @@ from PySide6.QtWidgets import QWidget, QScrollArea, QLabel, QPushButton
 from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QSizePolicy
 from PySide6.QtWidgets import QDialog
 
+from utils.resource_helpers import resource_path
+
 class AboutWindow(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        cwd = os.path.dirname(os.path.abspath(__file__))
-        self.logo_path = os.path.join(cwd, '..', '..', '..', 'img', 'logo2.png')
+        self.logo_path = resource_path("img/logo2.png")
 
         self.setWindowTitle("About Kalium")
         self.setGeometry(400, 50, 450, 600)
@@ -33,8 +34,7 @@ class AboutWindow(QDialog):
 
         image_label = QLabel(self)
         pixmap = QPixmap(self.logo_path)
-        resize_factor = 0.5
-        transform = QTransform().scale(resize_factor, resize_factor)
+        transform = QTransform().scale(0.5, 0.5)
         resized_pixmap = pixmap.transformed(transform, Qt.SmoothTransformation)
 
         image_label.setPixmap(resized_pixmap)
