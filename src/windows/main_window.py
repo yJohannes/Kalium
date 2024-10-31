@@ -1,7 +1,7 @@
 import asyncio
 
+from PySide6.QtCore import Qt, QPoint, QEvent, Signal
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget
-from PySide6.QtCore import Qt, QPoint, QEvent
 from PySide6.QtGui import QClipboard, QKeySequence, QShortcut, QIcon, QColor
 
 from ui.ui import WindowUI
@@ -12,12 +12,16 @@ from utils.resource_helpers import resource_path
 from engine.old_engine import translate
 
 class MainWindow(QMainWindow):
+    old_pos = None
     clipboard = QClipboard()
     async_tasks = []
+    splitter_save = []
+    split = [100,100] 
 
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Kalium")
+        self.setMinimumSize(340, 435)
         icon = QIcon(resource_path("img/logo2.png"))
         QApplication.instance().setWindowIcon(icon)
         QApplication.instance().setAttribute(Qt.AA_EnableHighDpiScaling)
@@ -58,8 +62,9 @@ class MainWindow(QMainWindow):
 
         self.ui.show_legacy.clicked.connect(lambda: self._toggle_legacy_controls(not self.ui.g.isVisible()))
         self.ui.legacy_buttons.buttonToggled.connect(self._start_translation)
+
         return
-    
+
     def _setup_toolbar_signals(self):
         tb = self.ui.toolbar
         tb.mousePressEvent = self.drag_start
@@ -71,6 +76,8 @@ class MainWindow(QMainWindow):
         self.ui.theme_button.clicked.connect(lambda: self._change_panel(self.ui.theme_panel))
         self.ui.about_button.clicked.connect(lambda: self._open_sub_window(AboutWindow))
         self.ui.info_button.clicked.connect(lambda: self._open_sub_window(InfoWindow))
+
+        self.ui.panel_toggle.toggled.connect(self._toggle_panel)
         return
 
     def _setup_text_edit_signals(self):
@@ -128,7 +135,8 @@ class MainWindow(QMainWindow):
             "Ctrl+R":       self._copy_text,
             "Ctrl+P":       self._paste_text,
             "Ctrl+Q":       self._quick_translate,
-            "Ctrl+Shift+Z": lambda: self.ui.settings_button.setFocus(),
+            "Ctrl+B":       lambda: self.ui.panel_toggle.toggle(), # activates the toggled Signal
+            "Alt+Z":        lambda: self.ui.settings_button.setFocus(),
             "Ctrl+,":       lambda: self._change_panel(self.ui.settings_panel),
             "Ctrl+O":       lambda: self._change_panel(self.ui.settings_panel),
             "Ctrl+1":       lambda: self.ui.default_button.setChecked(True),
@@ -233,6 +241,16 @@ class MainWindow(QMainWindow):
         x, y = self.settings_manager.get_property("window", "position")
         w, h = self.settings_manager.get_property("window", "dimensions")
         self.setGeometry(x, y, w, h)
+        split = self.settings_manager.get_property("window", "split")
+        self.split = split
+        print(split)
+        toggle = self.ui.panel_toggle
+        if split[0] == 0: toggle.setChecked(True)
+        elif split[1] == 0: toggle.setChecked(False)
+        else: toggle.setChecked(True)
+
+        self.ui.splitter.setSizes(split)
+
         self.translation_mode = self.settings_manager.get_property("settings", "mode")
         for btn in self.ui.mode_button_group.buttons():
             if btn.property("mode") == self.translation_mode:
@@ -254,29 +272,90 @@ class MainWindow(QMainWindow):
         self.ui.save_colors()
         self.history_manager.set_data(self.ui.history_scroll.get_history_data())
         
+        s_manager = self.settings_manager
         geo = self.normalGeometry()
-        self.settings_manager.set_property("window", "position", [geo.x(), geo.y()])
-        self.settings_manager.set_property("window", "dimensions", [geo.width(), geo.height()])
-        self.settings_manager.set_property("settings", "mode", self.translation_mode)
 
-        self.settings_manager.set_property("toggles", "macros", self.ui.macro_table.isVisible())
-        self.settings_manager.set_property("toggles", "legacy", self.ui.g.isVisible())
+        s_manager.set_property("window", "position", [geo.x(), geo.y()])
+        s_manager.set_property("window", "dimensions", [geo.width(), geo.height()])
+        s_manager.set_property("window", "split", self.ui.splitter.sizes())
+        
+        s_manager.set_property("settings", "mode", self.translation_mode)
 
-        self.settings_manager.set_property("legacy", "g", self.ui.g.isChecked())
-        self.settings_manager.set_property("legacy", "e", self.ui.e.isChecked())
-        self.settings_manager.set_property("legacy", "i", self.ui.i.isChecked())
-        self.settings_manager.set_property("legacy", "constants", self.ui.constants.isChecked())
+        s_manager.set_property("toggles", "macros", self.ui.macro_table.isVisible())
+        s_manager.set_property("toggles", "legacy", self.ui.g.isVisible())
 
-        self.settings_manager.save_data()
+        s_manager.set_property("legacy", "g", self.ui.g.isChecked())
+        s_manager.set_property("legacy", "e", self.ui.e.isChecked())
+        s_manager.set_property("legacy", "i", self.ui.i.isChecked())
+        s_manager.set_property("legacy", "constants", self.ui.constants.isChecked())
+
+        s_manager.save_data()
         self.history_manager.save_data()
         self.macro_manager.save_data()
         return
 
+    def _toggle_panel(self, show: bool):
+        """Called when toggle_panel button is toggled"""
+        splitter = self.ui.splitter
+        toggle = self.ui.panel_toggle
+        
+        io_sz, panel_sz = splitter.sizes()
+        if show:
+            # set button text to hide panel
+            toggle.setText("-")
+            # splitter.setSizes(self.split)
+            splitter.setSizes([0.5 * io_sz,  0.5 * io_sz])
+        else:
+            # set button text to show panel
+            self.split = splitter.sizes()
+            toggle.setText("+")
+            splitter.setSizes([1, 0])
+
+
     def _change_panel(self, panel: QWidget):
-        if self.ui.splitter.widget(1) is not panel:
-            self.ui.splitter.replaceWidget(1, panel)
+
+        splitter = self.ui.splitter
+        toggle = self.ui.panel_toggle
+        minus = toggle.isChecked()
+        plus = not minus
+
+        # if toggle is set to hide panel (-) both splitter sides are shown
+        # ==> there is no reason to replace the panel with itself
+        if minus and splitter.widget(1) is panel:
+            return
+
+        io_sz, panel_sz = splitter.sizes()
+        io_vis = io_sz > 0
+        panel_vis = panel_sz > 0
+
+        # if both vis
+        if io_vis and panel_vis and splitter.widget(1) is not panel:
+            self.split = splitter.sizes()
+            splitter.replaceWidget(1, panel)
+            splitter.setSizes(splitter.sizes()) # magik 
+            panel.setFocus()
+            return
+        
+        # only panel showing (- on toggle)
+        if minus and not io_vis:
+            splitter.replaceWidget(1, panel)
+            panel.setFocus()
+            return
+
+        # if only io showing (+ on toggle)
+        if plus:
+            self.split = splitter.sizes()
+            toggle.blockSignals(True)
+            toggle.setChecked(True) # toggle to (-) change sign 
+            toggle.setText("-")
+            toggle.blockSignals(False)
+            splitter.setSizes([0, 1]) # toggle changes sizes but this overrides them
+            splitter.replaceWidget(1, panel)
+
+        # Finally set focus to clicked panel
         panel.setFocus()
         return
+
 
     def _start_animation(self, animation: "function"):
         loop = asyncio.get_event_loop()
@@ -289,15 +368,6 @@ class MainWindow(QMainWindow):
         new_task = loop.create_task(animation())
         self.async_tasks.append(new_task)
         return 
-
-    def eventFilter(self, source, event) -> bool:
-        if event.type() == QEvent.MouseButtonPress:
-            self.clearFocus()
-            # Set focus back to the main window
-            self.setFocus(Qt.OtherFocusReason)  
-            return True # Event handled
-        
-        return super().eventFilter(source, event)
 
     def _open_sub_window(self, sub_type: AboutWindow | InfoWindow | EditorWindow, *args, **kwargs):
         self.sub: QWidget = sub_type(self, *args, **kwargs)
@@ -367,3 +437,11 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         self._save_data()
         event.accept()
+
+    def eventFilter(self, source, event) -> bool:
+        if event.type() == QEvent.MouseButtonPress:
+            self.clearFocus()
+            # Set focus back to the main window
+            self.setFocus(Qt.OtherFocusReason)  
+            return True # Event handled
+        return super().eventFilter(source, event)

@@ -99,12 +99,20 @@ class WindowUI:
         self.info_button = QPushButton("Info")
         self.info_button.setProperty("class", "toolbutton")
 
+        self.panel_toggle = QPushButton("-")
+        self.panel_toggle.setProperty("class", "toolbutton")
+        self.panel_toggle.setCheckable(True)
+        self.panel_toggle.setChecked(True)
+        self.panel_toggle.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
+        self.panel_toggle.setFixedWidth(32)
+
         tb_layout.addWidget(self.settings_button)
         tb_layout.addWidget(self.history_button)
         tb_layout.addWidget(self.theme_button)
         tb_layout.addWidget(self.about_button)
         tb_layout.addWidget(self.info_button)
         tb_layout.addStretch()
+        tb_layout.addWidget(self.panel_toggle)
 
         self.toolbar = QToolBar()
         self.toolbar.setMovable(False)
@@ -214,6 +222,7 @@ class WindowUI:
         self.show_macros_button = QPushButton("✕")
         self.show_macros_button.setProperty("class", "toolbutton")
         self.show_macros_button.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.show_macros_button.setFixedWidth(36)
 
 
         macro_control_layout.addWidget(macro_label)
@@ -249,6 +258,7 @@ class WindowUI:
         self.show_legacy = QPushButton("✕")
         self.show_legacy.setProperty("class", "toolbutton")
         self.show_legacy.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.show_legacy.setFixedWidth(36)
 
         legacy_control_layout.addWidget(legacy_label)
         legacy_control_layout.addStretch()
@@ -262,14 +272,14 @@ class WindowUI:
         const_g_layout = QHBoxLayout()
         self.constants = QPushButton("Nspire constants")
         self.constants.setCheckable(True)
-        self.g = QPushButton("g to _g")
+        self.g = QPushButton("g → _g")
         self.g.setCheckable(True)
         const_g_layout.addWidget(self.constants, stretch=10)
         const_g_layout.addWidget(self.g, stretch=3)
 
         ei_layout = QHBoxLayout()
-        self.e = QPushButton("e to @e")
-        self.i = QPushButton("i to @i")
+        self.e = QPushButton("e → @e")
+        self.i = QPushButton("i → @i")
         self.e.setCheckable(True)
         self.i.setCheckable(True)
         ei_layout.addWidget(self.e)
@@ -420,6 +430,8 @@ class WindowUI:
     def _finish_init(self, window):
         self.splitter = QSplitter(Qt.Horizontal)
         self.splitter.setSizes([4, 3]) # initial split ratio
+        self.splitter.setHandleWidth(2)
+        # self.splitter.setOpaqueResize(False)
 
         self.splitter.addWidget(self.io_panel)
         self.splitter.addWidget(self.settings_panel)

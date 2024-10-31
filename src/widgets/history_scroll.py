@@ -88,7 +88,7 @@ class HistoryScroll(QScrollArea):
         label.setProperty("class", "toolbutton")
         label.setObjectName(str(self.num_buttons))
         label.setCursor(Qt.PointingHandCursor)
-        label.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Minimum)
+        label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
         label.setFocusPolicy(Qt.TabFocus)
 
         label.setWordWrap(True)
