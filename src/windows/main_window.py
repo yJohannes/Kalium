@@ -117,7 +117,7 @@ class MainWindow(QMainWindow):
         return
 
     def _setup_macro_signals(self):
-        self.ui.open_macros_btn.clicked.connect(lambda: self._open_file_editor(resource_path("data/macros.json"), self._update_macro_table))
+        self.ui.open_macros_btn.clicked.connect(lambda: self._open_file_editor(exe_dir_path("data/macros.json"), self._update_macro_table))
         self.ui.macro_table.macrosChanged.connect(lambda data: self.macro_manager.set_data(data))
         self.ui.show_macros_button.clicked.connect(lambda: self._toggle_macros(not self.ui.macro_table.isVisible()))
         self.ui.add_macro.clicked.connect(lambda _: self.ui.macro_table.add_row())
@@ -200,6 +200,10 @@ class MainWindow(QMainWindow):
             i_on=self.ui.i.isChecked(),
             e_on=self.ui.e.isChecked()
         )
+        
+        if self.ui.coul.isChecked():
+            translation = translation.replace("k", "_Cc")
+
         for macro in self.ui.macro_table.get_data():
             if macro[2] and macro[0] != "":
                 translation = translation.replace(macro[0], macro[1])
@@ -314,7 +318,6 @@ class MainWindow(QMainWindow):
             toggle.setText("+")
             splitter.setSizes([1, 0])
 
-
     def _change_panel(self, panel: QWidget):
 
         splitter = self.ui.splitter
@@ -322,9 +325,9 @@ class MainWindow(QMainWindow):
         minus = toggle.isChecked()
         plus = not minus
 
-        # if toggle is set to hide panel (-) both splitter sides are shown
-        # ==> there is no reason to replace the panel with itself
+        # both panels showing
         if minus and splitter.widget(1) is panel:
+            panel.setFocus()
             return
 
         io_sz, panel_sz = splitter.sizes()
@@ -355,7 +358,6 @@ class MainWindow(QMainWindow):
             splitter.setSizes([0, 1]) # toggle changes sizes but this overrides them
             splitter.replaceWidget(1, panel)
 
-        # Finally set focus to clicked panel
         panel.setFocus()
         return
 

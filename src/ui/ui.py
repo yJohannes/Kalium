@@ -1,5 +1,3 @@
-import os
-
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QColor
 
