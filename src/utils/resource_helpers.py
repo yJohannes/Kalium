@@ -1,6 +1,13 @@
 import os
 import sys
 
+def exe_dir_path(relative_path):
+    if getattr(sys, 'frozen', False):
+        base_path = os.path.dirname(sys.executable)
+    else:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
 def resource_path(relative_path):
     """Get absolute path to resource in dev and in exe"""
     relative_path = relative_path.replace("/", "\\")

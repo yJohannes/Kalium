@@ -8,7 +8,7 @@ from ui.ui import WindowUI
 from widgets.message_boxes import new_error_box
 from windows.sub_windows import AboutWindow, InfoWindow, EditorWindow
 from utils.json_manager import JSONManager
-from utils.resource_helpers import resource_path
+from utils.resource_helpers import resource_path, exe_dir_path
 from engine.old_engine import translate
 
 class MainWindow(QMainWindow):
@@ -26,9 +26,9 @@ class MainWindow(QMainWindow):
         QApplication.instance().setWindowIcon(icon)
         QApplication.instance().setAttribute(Qt.AA_EnableHighDpiScaling)
 
-        settings = resource_path("config/settings.json")
-        history = resource_path("data/history.json")
-        macros = resource_path("data/macros.json")
+        settings = exe_dir_path("config/settings.json")
+        history = exe_dir_path("data/history.json")
+        macros = exe_dir_path("data/macros.json")
 
         self.settings_manager = JSONManager(settings)
         self.history_manager = JSONManager(history)
@@ -205,6 +205,10 @@ class MainWindow(QMainWindow):
                 translation = translation.replace(macro[0], macro[1])
         self.ui.o_text_edit.setPlainText(translation)
         self._start_animation(self._animate_progressbar)
+        try:
+            self.ui.o_text_edit.setPlainText(self.ooga)
+        except:
+            pass
         return
 
     def _on_translation_mode_changed(self, btn, on):
@@ -243,7 +247,6 @@ class MainWindow(QMainWindow):
         self.setGeometry(x, y, w, h)
         split = self.settings_manager.get_property("window", "split")
         self.split = split
-        print(split)
         toggle = self.ui.panel_toggle
         if split[0] == 0: toggle.setChecked(True)
         elif split[1] == 0: toggle.setChecked(False)

@@ -12,14 +12,14 @@ from PySide6.QtWidgets import (
     QGraphicsDropShadowEffect
 )
 
-from utils.resource_helpers import load_and_concatenate, resource_path
+from utils.resource_helpers import load_and_concatenate, resource_path, exe_dir_path
 from utils.json_manager import JSONManager
 from widgets import ColorPicker, ColorForm, HistoryScroll, MacroTable
 
 class WindowUI:
     def __init__(self) -> None:
         self.style_folder_path = resource_path("src/ui/styles")
-        theme_path = resource_path("config/theme.json")
+        theme_path = exe_dir_path("config/theme.json")
 
         self.cached_stylesheet = None
         self.theme_manager = JSONManager(theme_path)
