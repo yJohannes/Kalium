@@ -117,6 +117,7 @@ class MainWindow(QMainWindow):
         return
 
     def _setup_macro_signals(self):
+        print(exe_dir_path("data/macros.json"))
         self.ui.open_macros_btn.clicked.connect(lambda: self._open_file_editor(exe_dir_path("data/macros.json"), self._update_macro_table))
         self.ui.macro_table.macrosChanged.connect(lambda data: self.macro_manager.set_data(data))
         self.ui.show_macros_button.clicked.connect(lambda: self._toggle_macros(not self.ui.macro_table.isVisible()))
@@ -201,9 +202,6 @@ class MainWindow(QMainWindow):
             e_on=self.ui.e.isChecked()
         )
         
-        if self.ui.coul.isChecked():
-            translation = translation.replace("k", "_Cc")
-
         for macro in self.ui.macro_table.get_data():
             if macro[2] and macro[0] != "":
                 translation = translation.replace(macro[0], macro[1])
@@ -319,48 +317,45 @@ class MainWindow(QMainWindow):
             splitter.setSizes([1, 0])
 
     def _change_panel(self, panel: QWidget):
-
         splitter = self.ui.splitter
         toggle = self.ui.panel_toggle
-        minus = toggle.isChecked()
-        plus = not minus
-
-        # both panels showing
-        if minus and splitter.widget(1) is panel:
-            panel.setFocus()
-            return
+        is_collapsed = toggle.isChecked()
 
         io_sz, panel_sz = splitter.sizes()
-        io_vis = io_sz > 0
-        panel_vis = panel_sz > 0
+        io_visible = io_sz > 0
+        panel_visible = panel_sz > 0
+        current_panel = splitter.widget(1)
 
-        # if both vis
-        if io_vis and panel_vis and splitter.widget(1) is not panel:
-            self.split = splitter.sizes()
-            splitter.replaceWidget(1, panel)
-            splitter.setSizes(splitter.sizes()) # magik 
-            panel.setFocus()
-            return
-        
-        # only panel showing (- on toggle)
-        if minus and not io_vis:
-            splitter.replaceWidget(1, panel)
-            panel.setFocus()
+        # Collapse panel if toggle is checked and same panel
+        if is_collapsed and current_panel is panel:
+            if io_visible:
+                panel.setFocus()
+            else:
+                splitter.setSizes([1, 0])
+                self._update_toggle(toggle, checked=False, text="+")
+                self.ui.io_panel.setFocus()
             return
 
-        # if only io showing (+ on toggle)
-        if plus:
-            self.split = splitter.sizes()
-            toggle.blockSignals(True)
-            toggle.setChecked(True) # toggle to (-) change sign 
-            toggle.setText("-")
-            toggle.blockSignals(False)
-            splitter.setSizes([0, 1]) # toggle changes sizes but this overrides them
+        # Switch to new panel if both visible and different panel
+        if io_visible and panel_visible and current_panel is not panel:
             splitter.replaceWidget(1, panel)
+            panel.setFocus()
+            return
 
-        panel.setFocus()
-        return
+        # Handle only panel visible or toggle in "expanded" state
+        if is_collapsed or not io_visible:
+            splitter.replaceWidget(1, panel)
+            panel.setFocus()
+        else:
+            splitter.setSizes([0, 1])
+            splitter.replaceWidget(1, panel)
+            self._update_toggle(toggle, checked=True, text="-")
 
+    def _update_toggle(self, toggle: QWidget, checked: bool, text: str):
+        toggle.blockSignals(True)
+        toggle.setChecked(checked)
+        toggle.setText(text)
+        toggle.blockSignals(False)
 
     def _start_animation(self, animation: "function"):
         loop = asyncio.get_event_loop()
@@ -450,3 +445,73 @@ class MainWindow(QMainWindow):
             self.setFocus(Qt.OtherFocusReason)  
             return True # Event handled
         return super().eventFilter(source, event)
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# def _change_panel(self, panel: QWidget):
+
+    #     splitter = self.ui.splitter
+    #     toggle = self.ui.panel_toggle
+    #     minus = toggle.isChecked()
+    #     plus = not minus
+
+
+    #     io_sz, panel_sz = splitter.sizes()
+    #     io_vis = io_sz > 0
+    #     panel_vis = panel_sz > 0
+
+    #     # both panels or just panel showing and same panel
+    #     if minus and splitter.widget(1) is panel:
+    #         if not io_vis:
+    #             splitter.setSizes([1, 0])
+    #             toggle.blockSignals(True)
+    #             toggle.setChecked(False) # toggle to (-) change sign 
+    #             toggle.setText("+")
+    #             toggle.blockSignals(False)
+    #             self.ui.io_panel.setFocus()
+    #         else:
+    #             panel.setFocus()
+    #         return
+        
+    #     # if both vis
+    #     if io_vis and panel_vis and splitter.widget(1) is not panel:
+    #         self.split = splitter.sizes()
+    #         splitter.replaceWidget(1, panel)
+    #         splitter.setSizes(splitter.sizes()) # magik 
+    #         panel.setFocus()
+    #         return
+        
+    #     # only panel showing (- on toggle)
+    #     if minus and not io_vis:
+    #         splitter.replaceWidget(1, panel)
+    #         panel.setFocus()
+    #         return
+
+    #     # if only io showing (+ on toggle)
+    #     if plus:
+    #         self.split = splitter.sizes()
+    #         toggle.blockSignals(True)
+    #         toggle.setChecked(True) # toggle to (-) change sign 
+    #         toggle.setText("-")
+    #         toggle.blockSignals(False)
+    #         splitter.setSizes([0, 1]) # toggle changes sizes but this overrides them
+    #         splitter.replaceWidget(1, panel)
+
+    #     panel.setFocus()
+    #     return

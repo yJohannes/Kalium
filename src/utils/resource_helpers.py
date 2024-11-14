@@ -2,6 +2,8 @@ import os
 import sys
 
 def exe_dir_path(relative_path):
+    relative_path = relative_path.replace("/", "\\")
+
     if getattr(sys, 'frozen', False):
         base_path = os.path.dirname(sys.executable)
     else:

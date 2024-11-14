@@ -103,6 +103,8 @@ class WindowUI:
         self.panel_toggle.setChecked(True)
         self.panel_toggle.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
         self.panel_toggle.setFixedWidth(32)
+        self.panel_toggle.setStyleSheet("font-weight: bold;")
+
 
         tb_layout.addWidget(self.settings_button)
         tb_layout.addWidget(self.history_button)
@@ -158,7 +160,6 @@ class WindowUI:
         
         io_layout.addWidget(self.progressbar)
         io_layout.addLayout(io_widget_container)
-        io_layout.addStretch()
         return
 
     def _init_settings(self, window):
