@@ -1,4 +1,3 @@
-
 import sys
 from PySide6.QtWidgets import QApplication, QTableWidget, QTableWidgetItem, QHeaderView, QVBoxLayout, QPushButton, QWidget, QSizePolicy
 from PySide6.QtWidgets import QAbstractItemView
@@ -41,37 +40,6 @@ class MacroTable(QTableWidget):
         hh.setSectionResizeMode(QHeaderView.Stretch)
         hh.setSectionResizeMode(2, QHeaderView.Fixed)
         hh.setSectionResizeMode(3, QHeaderView.Fixed)
-        
-
-        return
-    
-    def _move_row(self, logical, old_visual, new_visual):
-        h = self.verticalHeader()
-        h.blockSignals(True)
-        self.blockSignals(True)
-        h.moveSection(new_visual, old_visual)
-
-        old0 = self.item(old_visual, 0)
-        old1 = self.item(old_visual, 1)
-
-        new0 = self.item(new_visual, 0)
-        new1 = self.item(new_visual, 1)
-
-        old0t = old0.text()
-        old1t = old1.text()
-
-        new0t = new0.text()
-        new1t = new1.text()
-
-        old0.setText(new0t)
-        old1.setText(new1t)
-
-        new0.setText(old0t)
-        new1.setText(old1t)
-
-        h.blockSignals(False)
-        self.blockSignals(False)
-        self.update_data()
         return
 
     def add_row(self, from_to_state: list[str, str, bool]=['','', True], update_data=True):
@@ -173,7 +141,35 @@ class MacroTable(QTableWidget):
         self.update_data()
         return
 
-    
+    def _move_row(self, logical, old_visual, new_visual):
+        h = self.verticalHeader()
+        h.blockSignals(True)
+        self.blockSignals(True)
+        h.moveSection(new_visual, old_visual)
+
+        old0 = self.item(old_visual, 0)
+        old1 = self.item(old_visual, 1)
+
+        new0 = self.item(new_visual, 0)
+        new1 = self.item(new_visual, 1)
+
+        old0t = old0.text()
+        old1t = old1.text()
+
+        new0t = new0.text()
+        new1t = new1.text()
+
+        old0.setText(new0t)
+        old1.setText(new1t)
+
+        new0.setText(old0t)
+        new1.setText(old1t)
+
+        h.blockSignals(False)
+        self.blockSignals(False)
+        self.update_data()
+        return
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = MacroTable()

@@ -1,7 +1,6 @@
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QSizePolicy, QLayout
-from PySide6.QtWidgets import QWidget, QPushButton, QLabel, QScrollArea 
-from PySide6.QtGui import QColor
+from PySide6.QtWidgets import QVBoxLayout, QSizePolicy
+from PySide6.QtWidgets import QWidget, QLabel, QScrollArea 
 
 class HistoryScroll(QScrollArea):
     """Signal itemPressed emits the latex and translation the item has"""
@@ -120,44 +119,3 @@ class HistoryScroll(QScrollArea):
         for item in self.content_widget.findChildren(QLabel):
             data.append([item.property("latex"), item.text()])
         return data
-
-"""
-
-
-class HistoryScroll(QWidget):
-    def __init__(self, parent: QWidget | None = None) -> None:
-        super().__init__(parent)
-        self.num_buttons = 0
-
-        self.m_layout = QVBoxLayout(self)
-        self.m_layout.setContentsMargins(0, 0, 0, 0)
-        self.m_layout.setAlignment(Qt.AlignTop)
-
-        self.scroll_area = QScrollArea()
-        self.scroll_area.setWidgetResizable(True)
-
-        self.content_layout = QVBoxLayout()
-        self.content_widget = QWidget()
-        self.content_widget.setLayout(self.content_layout)
-        self.content_widget.setStyleSheet("background-color: transparent;")
-        self.scroll_area.setWidget(self.content_widget)
-
-        self.m_layout.addWidget(self.scroll_area)
-
-    def create_button(self, latex: str, translation: str) -> None:
-        button = QPushButton(translation)
-        button.setProperty("latex", latex)
-        button.setProperty("class", "toolbutton")
-        button.setObjectName(str(self.num_buttons))
-        button.setCursor(Qt.PointingHandCursor)
-        button.setStyleSheet("text-align:left; vertical-align:top;")
-
-        self.content_layout.addWidget(button)
-        self.num_buttons += 1
-
-    def create_buttons(self, data: list[list[str, str]]) -> None:
-        for item in data:
-            self.create_button(item[0], item[1])
-        return
-
-"""

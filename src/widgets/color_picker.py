@@ -1,7 +1,8 @@
 from PySide6.QtCore import Qt, Signal, QPoint, QPointF
-from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QHBoxLayout
-from PySide6.QtWidgets import QWidget, QLabel, QSlider
 from PySide6.QtGui import QColor, QMouseEvent, QPaintEvent, QPainter, QLinearGradient, QBrush
+from PySide6.QtWidgets import (
+    QApplication, QMainWindow, QVBoxLayout, QHBoxLayout,
+    QWidget, QLabel, QSlider)
 
 class ColorPort(QWidget):
     """A widget that allows for color selection with a gradient."""

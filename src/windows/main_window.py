@@ -1,6 +1,6 @@
 import asyncio
 
-from PySide6.QtCore import Qt, QPoint, QEvent, Signal
+from PySide6.QtCore import Qt, QPoint, QEvent
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget
 from PySide6.QtGui import QClipboard, QKeySequence, QShortcut, QIcon, QColor
 
@@ -12,10 +12,9 @@ from utils.resource_helpers import resource_path, exe_dir_path
 from engine.old_engine import translate
 
 class MainWindow(QMainWindow):
-    old_pos = None
     clipboard = QClipboard()
     async_tasks = []
-    splitter_save = []
+    old_pos = None
     split = [100,100] 
 
     def __init__(self):
@@ -117,7 +116,7 @@ class MainWindow(QMainWindow):
         return
 
     def _setup_macro_signals(self):
-        print(exe_dir_path("data/macros.json"))
+        # print(exe_dir_path("data/macros.json"))
         self.ui.open_macros_btn.clicked.connect(lambda: self._open_file_editor(exe_dir_path("data/macros.json"), self._update_macro_table))
         self.ui.macro_table.macrosChanged.connect(lambda data: self.macro_manager.set_data(data))
         self.ui.show_macros_button.clicked.connect(lambda: self._toggle_macros(not self.ui.macro_table.isVisible()))
@@ -207,10 +206,6 @@ class MainWindow(QMainWindow):
                 translation = translation.replace(macro[0], macro[1])
         self.ui.o_text_edit.setPlainText(translation)
         self._start_animation(self._animate_progressbar)
-        try:
-            self.ui.o_text_edit.setPlainText(self.ooga)
-        except:
-            pass
         return
 
     def _on_translation_mode_changed(self, btn, on):
@@ -434,6 +429,7 @@ class MainWindow(QMainWindow):
             self.old_pos = None
         return super(QMainWindow, self).mouseReleaseEvent(event)
 
+# Overrides
     def closeEvent(self, event):
         self._save_data()
         event.accept()
@@ -445,73 +441,3 @@ class MainWindow(QMainWindow):
             self.setFocus(Qt.OtherFocusReason)  
             return True # Event handled
         return super().eventFilter(source, event)
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# def _change_panel(self, panel: QWidget):
-
-    #     splitter = self.ui.splitter
-    #     toggle = self.ui.panel_toggle
-    #     minus = toggle.isChecked()
-    #     plus = not minus
-
-
-    #     io_sz, panel_sz = splitter.sizes()
-    #     io_vis = io_sz > 0
-    #     panel_vis = panel_sz > 0
-
-    #     # both panels or just panel showing and same panel
-    #     if minus and splitter.widget(1) is panel:
-    #         if not io_vis:
-    #             splitter.setSizes([1, 0])
-    #             toggle.blockSignals(True)
-    #             toggle.setChecked(False) # toggle to (-) change sign 
-    #             toggle.setText("+")
-    #             toggle.blockSignals(False)
-    #             self.ui.io_panel.setFocus()
-    #         else:
-    #             panel.setFocus()
-    #         return
-        
-    #     # if both vis
-    #     if io_vis and panel_vis and splitter.widget(1) is not panel:
-    #         self.split = splitter.sizes()
-    #         splitter.replaceWidget(1, panel)
-    #         splitter.setSizes(splitter.sizes()) # magik 
-    #         panel.setFocus()
-    #         return
-        
-    #     # only panel showing (- on toggle)
-    #     if minus and not io_vis:
-    #         splitter.replaceWidget(1, panel)
-    #         panel.setFocus()
-    #         return
-
-    #     # if only io showing (+ on toggle)
-    #     if plus:
-    #         self.split = splitter.sizes()
-    #         toggle.blockSignals(True)
-    #         toggle.setChecked(True) # toggle to (-) change sign 
-    #         toggle.setText("-")
-    #         toggle.blockSignals(False)
-    #         splitter.setSizes([0, 1]) # toggle changes sizes but this overrides them
-    #         splitter.replaceWidget(1, panel)
-
-    #     panel.setFocus()
-    #     return
