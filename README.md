@@ -14,14 +14,27 @@ A tool made in high school as a total beginner to translate LaTeX expressions to
 - Or just strip LaTeX to raw symbolic expressions.
 
 ## Screenshots
+Start view.
 ![Start](screenshots/start.png)
+
+Example with units on for SpeedCrunch.
 ![SpeedCrunch with units](screenshots/speedcrunch_units.png)
+
+History
 ![History](screenshots/history.png)
+
+Themes (custom themes are implemented but locked as of now)
 ![Theme dark](screenshots/theme_dark.png)
 ![Theme light](screenshots/theme_light.png)
+
+Macros
 ![Macros](screenshots/macros.png)
+
+The app can be minified from the +/- button.
 ![Minified](screenshots/minified.png)
 ![Minified history](screenshots/minified_history.png)
+
+List of shortcuts.
 ![Shortcuts](screenshots/shortcuts.png)
 
 ## License
