@@ -14,15 +14,15 @@ A tool made in high school as a total beginner to translate LaTeX expressions to
 - Or just strip LaTeX to raw symbolic expressions.
 
 ## Screenshots
-[!Start](screenshots/start.png)
-[!SpeedCrunch with units](screenshots/speedcrunch_units.png)
-[!History](screenshots/history.png)
-[!Theme dark](screenshots/theme_dark.png)
-[!Theme light](screenshots/theme_light.png)
-[!Macros](screenshots/macros.png)
-[!Minified](screenshots/minified.png)
-[!Minified history](screenshots/minified_history.png)
-[!Shortcuts](screenshots/shortcuts.png)
+![Start](screenshots/start.png)
+![SpeedCrunch with units](screenshots/speedcrunch_units.png)
+![History](screenshots/history.png)
+![Theme dark](screenshots/theme_dark.png)
+![Theme light](screenshots/theme_light.png)
+![Macros](screenshots/macros.png)
+![Minified](screenshots/minified.png)
+![Minified history](screenshots/minified_history.png)
+![Shortcuts](screenshots/shortcuts.png)
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
